@@ -6,12 +6,22 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "node --loader tsx --test test/index.ts"
+    "test": "node --loader tsx --test test/index.ts",
+    "lint": "prettier . --write",
+    "lint:check": "prettier . --check",
+    "prepare": "husky install"
   },
   "author": "drew887121@gmail.com",
   "license": "MPL-2.0",
   "devDependencies": {
+    "@types/node": "^20.8.3",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
+    "prettier": "3.0.3",
     "tsx": "^3.13.0",
     "typescript": "^5.2.2"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }
