@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "node --loader tsx --test test/index.ts",
+    "test": "find ./ -name '*.spec.ts' -exec node --loader tsx --test {} \\;",
     "lint": "prettier . --write",
     "lint:check": "prettier . --check",
     "prepare": "husky install"

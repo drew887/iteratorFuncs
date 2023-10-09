@@ -4,11 +4,12 @@
     "tsBuildInfoFile": "./.tsbuildinfo",
     "target": "es2016",
     "module": "commonjs",
-    "rootDir": "./src",
+    //    "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src/**/*.ts", "test/**/*.test.ts"]
 }

@@ -6,9 +6,9 @@
  * @param reducer
  * @param initial
  */
-export function reduceIterator<T, TReturn>(
-  iterator: Iterable<T>,
-  reducer: (carry: TReturn, arg: T) => TReturn,
+export function reduceIterator<TValue, TReturn>(
+  iterator: Iterable<TValue>,
+  reducer: (carry: TReturn, arg: TValue) => TReturn,
   initial: TReturn,
 ): TReturn {
   let result: TReturn = initial;
