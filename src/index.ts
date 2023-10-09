@@ -31,10 +31,7 @@ export function reduceIterator<TValue, TReturn>(
  * @param iterator
  * @param mapper
  */
-export function mapIterator<T, TReturn>(
-  iterator: Iterable<T>,
-  mapper: (arg: T) => TReturn,
-): Array<TReturn> {
+export function mapIterator<T, TReturn>(iterator: Iterable<T>, mapper: (arg: T) => TReturn): Array<TReturn> {
   return reduceIterator(
     iterator,
     (carry, item): TReturn[] => {

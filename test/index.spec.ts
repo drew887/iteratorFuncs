@@ -1,10 +1,10 @@
-import { beforeEach, describe, it } from "node:test";
-import assert from "node:assert";
+import { beforeEach, describe, it } from 'node:test';
+import assert from 'node:assert';
 
-import { mapIterator, reduceIterator } from "../src";
+import { mapIterator, reduceIterator } from '../src';
 
-describe("reduce", () => {
-  describe("Generator", () => {
+describe('reduce', () => {
+  describe('Generator', () => {
     let iter: Generator<number, void>;
 
     const generator = function* () {
@@ -19,7 +19,7 @@ describe("reduce", () => {
       iter = generator();
     });
 
-    it("should map the iterator to the end", () => {
+    it('should map the iterator to the end', () => {
       const actual = reduceIterator(
         iter as IterableIterator<number>,
         (carry, item) => {
@@ -28,18 +28,18 @@ describe("reduce", () => {
         0,
       );
 
-      assert.strictEqual(iter.next().done, true, "iterator marks done");
-      assert.strictEqual(actual, 15, "computes the right number");
+      assert.strictEqual(iter.next().done, true, 'iterator marks done');
+      assert.strictEqual(actual, 15, 'computes the right number');
     });
   });
 
-  describe("Iterable", () => {});
+  describe('Iterable', () => {});
 
-  describe("IterableIterator", () => {});
+  describe('IterableIterator', () => {});
 });
 
-describe("map", () => {
-  describe("generator", () => {
+describe('map', () => {
+  describe('generator', () => {
     let iter: Generator<number, void>;
 
     const generator = function* () {
@@ -54,18 +54,14 @@ describe("map", () => {
       iter = generator();
     });
 
-    it("should map all the elements as expected", () => {
+    it('should map all the elements as expected', () => {
       const mapped = mapIterator(iter, (num) => {
         return num + 1;
       });
       const expected = [2, 3, 4, 5, 6];
 
-      assert.strictEqual(iter.next().done, true, "iterator marks done");
-      assert.deepEqual(
-        mapped,
-        expected,
-        "Gets all values and correctly maps them",
-      );
+      assert.strictEqual(iter.next().done, true, 'iterator marks done');
+      assert.deepEqual(mapped, expected, 'Gets all values and correctly maps them');
     });
   });
 });
