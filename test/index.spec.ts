@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import { mapIterator, reduceIterator } from '../src';
 
 describe('reduce', () => {
-  describe('Generator', () => {
+  describe('over Generators', () => {
     let iter: Generator<number, void>;
 
     const generator = function* () {
@@ -33,9 +33,88 @@ describe('reduce', () => {
     });
   });
 
-  describe('Iterable', () => {});
+  describe('over Sets', () => {
+    it("should reduce over a Set's values", () => {
+      const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+      const iter = set.values();
+      const expected = 15;
 
-  describe('IterableIterator', () => {});
+      const actual = reduceIterator(
+        iter,
+        (carry, item) => {
+          return carry + item;
+        },
+        0,
+      );
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.strictEqual(actual, expected, "Reduces over the Set's values as expected");
+    });
+  });
+
+  describe('Maps', () => {
+    const set: Map<string, number> = new Map(
+      [1, 2, 3, 4, 5].map((item) => {
+        return [`${item}`, item];
+      }),
+    );
+
+    it('should reduce over values', () => {
+      const iter = set.values();
+      const expected = 15;
+
+      const actual = reduceIterator(
+        iter,
+        (carry, item) => {
+          return carry + item;
+        },
+        0,
+      );
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.strictEqual(actual, expected, "Reduces over the Map's values as expected");
+    });
+
+    it('should reduce over keys', () => {
+      const iter = set.keys();
+      const expected = '12345';
+
+      const actual = reduceIterator(
+        iter,
+        (carry, item) => {
+          return carry + item;
+        },
+        '',
+      );
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.strictEqual(actual, expected, "Reduces over the Map's keys as expected");
+    });
+
+    it('should reduce over entries', () => {
+      const iter = set.entries();
+      const expected = [
+        ['1', 1],
+        ['2', 2],
+        ['3', 3],
+        ['4', 4],
+        ['5', 5],
+      ];
+
+      const actual = reduceIterator(
+        iter,
+        (carry, item) => {
+          carry.push(item);
+
+          return carry;
+        },
+        [] as Array<[string, number]>,
+      );
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Reduces over the Map's entries as expected");
+    });
+  });
 });
 
 describe('map', () => {
@@ -55,13 +134,14 @@ describe('map', () => {
     });
 
     it('should map all the elements as expected', () => {
-      const mapped = mapIterator(iter, (num) => {
-        return num + 1;
-      });
       const expected = [2, 3, 4, 5, 6];
 
+      const actual = mapIterator(iter, (num) => {
+        return num + 1;
+      });
+
       assert.strictEqual(iter.next().done, true, 'iterator marks done');
-      assert.deepEqual(mapped, expected, 'Gets all values and correctly maps them');
+      assert.deepEqual(actual, expected, 'Gets all values and correctly maps them');
     });
   });
 });
