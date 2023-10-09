@@ -1,5 +1,5 @@
 {
-  "name": "iteratorfuncs",
+  "name": "@drew887121/iteratorfuncs",
   "version": "0.0.0",
   "description": "A  small package to make working with iterators easier",
   "main": "dist/index.js",
@@ -23,5 +23,23 @@
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
-  }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drew887/iteratorFuncs.git"
+  },
+  "keywords": [
+    "iterators",
+    "iterator",
+    "map",
+    "reduce",
+    "filter"
+  ],
+  "bugs": {
+    "url": "https://github.com/drew887/iteratorFuncs/issues"
+  },
+  "homepage": "https://github.com/drew887/iteratorFuncs#readme"
 }
