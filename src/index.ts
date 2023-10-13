@@ -42,3 +42,17 @@ export function mapIterator<T, TReturn>(iterator: Iterable<T>, mapper: (arg: T) 
     [] as TReturn[],
   );
 }
+
+export function filterIterator<TValue>(iterator: Iterable<TValue>, filter: (arg: TValue) => boolean): Array<TValue> {
+  return reduceIterator(
+    iterator,
+    (carry, item) => {
+      if (filter(item)) {
+        carry.push(item);
+      }
+
+      return carry;
+    },
+    [] as Array<TValue>,
+  );
+}

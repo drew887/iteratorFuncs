@@ -1,9 +1,9 @@
 import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 
-import { mapIterator, reduceIterator } from '../src';
+import { filterIterator, mapIterator, reduceIterator } from '../src';
 
-describe('reduce', () => {
+describe('reduceIterator', () => {
   describe('over Generators', () => {
     let iter: Generator<number, void>;
 
@@ -117,7 +117,7 @@ describe('reduce', () => {
   });
 });
 
-describe('map', () => {
+describe('mapIterator', () => {
   describe('generator', () => {
     let iter: Generator<number, void>;
 
@@ -142,6 +142,34 @@ describe('map', () => {
 
       assert.strictEqual(iter.next().done, true, 'iterator marks done');
       assert.deepEqual(actual, expected, 'Gets all values and correctly maps them');
+    });
+  });
+});
+
+describe('filterIterator', () => {
+  describe('over Generators', () => {
+    let iter: Generator<number, void>;
+
+    const generator = function* () {
+      for (let i = 1; i <= 5; i++) {
+        yield i;
+      }
+
+      return;
+    };
+
+    beforeEach(() => {
+      iter = generator();
+    });
+
+    it('should contain only filtered items', () => {
+      const expected: Array<number> = [2, 4];
+
+      const actual = filterIterator(iter, (item): boolean => {
+        return item % 2 === 0;
+      });
+
+      assert.deepEqual(actual, expected, 'filters iterable as expected');
     });
   });
 });
