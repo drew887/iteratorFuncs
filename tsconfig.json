@@ -2,13 +2,17 @@
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
-    "target": "es2016",
-    "module": "commonjs",
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "module": "node16",
+    "target": "es2016", // set to the *lowest* target you support
+    "verbatimModuleSyntax": true,
+    "declaration": true,
+    "sourceMap": false,
+    "declarationMap": false
   },
   "include": ["src/**/*.ts", "test/**/*.test.ts"]
 }
