@@ -31,7 +31,10 @@ export function reduceIterator<TValue, TReturn>(
  * @param iterator
  * @param mapper
  */
-export function mapIterator<T, TReturn>(iterator: Iterable<T>, mapper: (arg: T) => TReturn): Array<TReturn> {
+export function mapIterator<TValue, TReturn>(
+  iterator: Iterable<TValue>,
+  mapper: (arg: TValue) => TReturn,
+): Array<TReturn> {
   return reduceIterator(
     iterator,
     (carry, item): TReturn[] => {
@@ -43,6 +46,11 @@ export function mapIterator<T, TReturn>(iterator: Iterable<T>, mapper: (arg: T) 
   );
 }
 
+/**
+ * Greedily Filter over an iterator and return an array of results
+ * @param iterator
+ * @param filter
+ */
 export function filterIterator<TValue>(iterator: Iterable<TValue>, filter: (arg: TValue) => boolean): Array<TValue> {
   return reduceIterator(
     iterator,

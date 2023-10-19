@@ -31,6 +31,27 @@ describe('reduceIterator', () => {
       assert.strictEqual(iter.next().done, true, 'iterator marks done');
       assert.strictEqual(actual, 15, 'computes the right number');
     });
+
+    it('should bail early if iterator throws', () => {
+      const err = new Error('failed Generator!');
+      const failingGenerator = function* () {
+        yield 5;
+        throw err;
+      };
+
+      const actual = () => {
+        return reduceIterator(
+          failingGenerator(),
+          (carry, item) => {
+            carry.push(item);
+            return carry;
+          },
+          [] as Array<number>,
+        );
+      };
+
+      assert.throws(actual, err);
+    });
   });
 
   describe('over Sets', () => {
