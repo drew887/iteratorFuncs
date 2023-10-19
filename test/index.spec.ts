@@ -73,7 +73,7 @@ describe('reduceIterator', () => {
     });
   });
 
-  describe('Maps', () => {
+  describe('over Maps', () => {
     const set: Map<string, number> = new Map(
       [1, 2, 3, 4, 5].map((item) => {
         return [`${item}`, item];
@@ -139,7 +139,7 @@ describe('reduceIterator', () => {
 });
 
 describe('mapIterator', () => {
-  describe('generator', () => {
+  describe('Generator', () => {
     let iter: Generator<number, void>;
 
     const generator = function* () {
@@ -163,6 +163,65 @@ describe('mapIterator', () => {
 
       assert.strictEqual(iter.next().done, true, 'iterator marks done');
       assert.deepEqual(actual, expected, 'Gets all values and correctly maps them');
+    });
+  });
+
+  describe('Sets', () => {
+    it("should map over a Set's values", () => {
+      const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+      const iter = set.values();
+      const expected = ['1-a', '2-a', '3-a', '4-a', '5-a'];
+
+      const actual = mapIterator(iter, (item): string => {
+        return `${item}-a`;
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Maps over the Set's values as expected");
+    });
+  });
+
+  describe('Maps', () => {
+    const set: Map<string, number> = new Map(
+      [1, 2, 3, 4, 5].map((item) => {
+        return [`${item}`, item];
+      }),
+    );
+
+    it('should map over values', () => {
+      const iter = set.values();
+      const expected = ['1-a', '2-a', '3-a', '4-a', '5-a'];
+
+      const actual = mapIterator(iter, (item): string => {
+        return `${item}-a`;
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Maps over the Map's values as expected");
+    });
+
+    it('should map over keys', () => {
+      const iter = set.keys();
+      const expected = ['1-a', '2-a', '3-a', '4-a', '5-a'];
+
+      const actual = mapIterator(iter, (item): string => {
+        return `${item}-a`;
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Maps over the Map's keys as expected");
+    });
+
+    it('should map over entries', () => {
+      const iter = set.entries();
+      const expected = ['1-1', '2-2', '3-3', '4-4', '5-5'];
+
+      const actual = mapIterator(iter, ([key, item]) => {
+        return `${key}-${item}`;
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Maps over the Map's entries as expected");
     });
   });
 });
@@ -191,6 +250,65 @@ describe('filterIterator', () => {
       });
 
       assert.deepEqual(actual, expected, 'filters iterable as expected');
+    });
+  });
+
+  describe('Sets', () => {
+    it("should filter over a Set's values", () => {
+      const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+      const iter = set.values();
+      const expected = [2, 4];
+
+      const actual = filterIterator(iter, (item): boolean => {
+        return item % 2 == 0;
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Filters the Set's values as expected");
+    });
+  });
+
+  describe('Maps', () => {
+    const set: Map<string, number> = new Map(
+      [1, 2, 3, 4, 5].map((item) => {
+        return [`${item}`, item];
+      }),
+    );
+
+    it('should filter over values', () => {
+      const iter = set.values();
+      const expected = [1, 3, 5];
+
+      const actual = filterIterator(iter, (item): boolean => {
+        return item % 2 == 1;
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Filters the Map's values as expected");
+    });
+
+    it('should map over keys', () => {
+      const iter = set.keys();
+      const expected = ['5'];
+
+      const actual = filterIterator(iter, (item): boolean => {
+        return item === '5';
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Filters over the Map's keys as expected");
+    });
+
+    it('should map over entries', () => {
+      const iter = set.entries();
+      const expected = [['1', 1]];
+
+      const actual = filterIterator(iter, ([key, item]): boolean => {
+        return key === '1';
+      });
+
+      assert.strictEqual(iter.next().done, true, 'marks as done');
+      assert.deepEqual(actual, expected, "Filters over the Map's entries as expected");
     });
   });
 });
