@@ -15,7 +15,7 @@ of the file and don't make changes to the file itself then you're fine to copy t
 
 ## Docs
 
-Docs are auto generated and live at [https://drew887.github.io](https://drew887.github.io/iteratorFuncs/modules.html)
+Docs are auto generated and live at [https://drew887.github.io/iteratorFuncs](https://drew887.github.io/iteratorFuncs/modules.html)
 
 ### Why not MIT?
 
