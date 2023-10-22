@@ -2,10 +2,10 @@
 
 ## A tiny package to simplify working with iterators
 
-It has become very common for me in places that I work in, to need to be able to do the classic map/reduce/filter/etc
+It has become very common for me in places that I work in to need to be able to do the classic map/reduce/filter/etc
 with iterators (but don't want to have to convert them into arrays first since that is bad for perf); while also not
-being allowed to bring in a package to do so say lodash or equivalent due to company/security policy of outside
-packages.
+being allowed to bring in a package to do so, say lodash or equivalent, due to company/security policy of not allowing
+new outside packages without having to go through a formal review process.
 
 So here is an MPL-2.0 licensed single file package that gives the ability to do just that.
 

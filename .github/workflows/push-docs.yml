@@ -11,6 +11,7 @@ on:
       - src/**
       - typedoc.json
       - docs/**
+      - README.md
 
 permissions:
   contents: write
