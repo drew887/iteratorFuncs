@@ -13,6 +13,10 @@ MPL-2.0 was used so that if need be you can copy the `src/index.ts` or `dist/ind
 projects. Since MPL-2.0 has so-called "file based copyleft" as long as you don't remove the license call out at the top
 of the file and don't make changes to the file itself then you're fine to copy the file into your project as needed.
 
+## Docs
+
+Docs are auto generated and live at [https://drew887.github.io](https://drew887.github.io/iteratorFuncs/modules.html)
+
 ### Why not MIT?
 
 TLDR, I Wanted to try out MPL-2.0 based things, and while the MIT license would also fit my use case quite well I want
