@@ -9,6 +9,8 @@ on:
       - main
     paths:
       - src/**
+      - typedoc.json
+      - docs/**
 
 permissions:
   contents: write
