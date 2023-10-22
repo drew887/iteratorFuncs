@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "tsc --build --clean",
+    "docs": "typedoc",
     "test": "find ./ -name '*.spec.ts' -exec node --loader tsx --test {} \\;",
     "test:coverage": "find ./ -name '*.spec.ts' -exec node --experimental-test-coverage --loader tsx --test {} \\;",
     "lint": "prettier . --write",
@@ -21,6 +22,8 @@
     "lint-staged": "^14.0.1",
     "prettier": "3.0.3",
     "tsx": "^3.13.0",
+    "typedoc": "^0.25.2",
+    "typedoc-plugin-markdown": "^3.16.0",
     "typescript": "^5.2.2"
   },
   "lint-staged": {
