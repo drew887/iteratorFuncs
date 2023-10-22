@@ -1,7 +1,7 @@
 import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 
-import { filterIterator, mapIterator, reduceIterator } from '../src';
+import { filterIterator, mapIterator, reduceIterator } from '../src/index.ts';
 
 describe('reduceIterator', () => {
   describe('over Generators', () => {
@@ -21,8 +21,8 @@ describe('reduceIterator', () => {
 
     it('should map the iterator to the end', () => {
       const actual = reduceIterator(
-        iter as IterableIterator<number>,
-        (carry, item) => {
+        iter,
+        (carry: number, item: number): number => {
           return carry + item;
         },
         0,
@@ -42,7 +42,7 @@ describe('reduceIterator', () => {
       const actual = () => {
         return reduceIterator(
           failingGenerator(),
-          (carry, item) => {
+          (carry: number[], item: number): number[] => {
             carry.push(item);
             return carry;
           },
@@ -62,7 +62,7 @@ describe('reduceIterator', () => {
 
       const actual = reduceIterator(
         iter,
-        (carry, item) => {
+        (carry: number, item: number): number => {
           return carry + item;
         },
         0,
@@ -86,7 +86,7 @@ describe('reduceIterator', () => {
 
       const actual = reduceIterator(
         iter,
-        (carry, item) => {
+        (carry: number, item: number): number => {
           return carry + item;
         },
         0,
@@ -102,7 +102,7 @@ describe('reduceIterator', () => {
 
       const actual = reduceIterator(
         iter,
-        (carry, item) => {
+        (carry: string, item: string): string => {
           return carry + item;
         },
         '',
@@ -124,7 +124,7 @@ describe('reduceIterator', () => {
 
       const actual = reduceIterator(
         iter,
-        (carry, item) => {
+        (carry: Array<[string, number]>, item: [string, number]): Array<[string, number]> => {
           carry.push(item);
 
           return carry;
@@ -157,7 +157,7 @@ describe('mapIterator', () => {
     it('should map all the elements as expected', () => {
       const expected = [2, 3, 4, 5, 6];
 
-      const actual = mapIterator(iter, (num) => {
+      const actual = mapIterator(iter, (num: number) => {
         return num + 1;
       });
 
@@ -172,7 +172,7 @@ describe('mapIterator', () => {
       const iter = set.values();
       const expected = ['1-a', '2-a', '3-a', '4-a', '5-a'];
 
-      const actual = mapIterator(iter, (item): string => {
+      const actual = mapIterator(iter, (item: number): string => {
         return `${item}-a`;
       });
 
@@ -192,7 +192,7 @@ describe('mapIterator', () => {
       const iter = set.values();
       const expected = ['1-a', '2-a', '3-a', '4-a', '5-a'];
 
-      const actual = mapIterator(iter, (item): string => {
+      const actual = mapIterator(iter, (item: number): string => {
         return `${item}-a`;
       });
 
@@ -204,7 +204,7 @@ describe('mapIterator', () => {
       const iter = set.keys();
       const expected = ['1-a', '2-a', '3-a', '4-a', '5-a'];
 
-      const actual = mapIterator(iter, (item): string => {
+      const actual = mapIterator(iter, (item: string): string => {
         return `${item}-a`;
       });
 
@@ -216,7 +216,7 @@ describe('mapIterator', () => {
       const iter = set.entries();
       const expected = ['1-1', '2-2', '3-3', '4-4', '5-5'];
 
-      const actual = mapIterator(iter, ([key, item]) => {
+      const actual = mapIterator(iter, ([key, item]: [string, number]): string => {
         return `${key}-${item}`;
       });
 
@@ -245,7 +245,7 @@ describe('filterIterator', () => {
     it('should contain only filtered items', () => {
       const expected: Array<number> = [2, 4];
 
-      const actual = filterIterator(iter, (item): boolean => {
+      const actual = filterIterator(iter, (item: number): boolean => {
         return item % 2 === 0;
       });
 
@@ -259,7 +259,7 @@ describe('filterIterator', () => {
       const iter = set.values();
       const expected = [2, 4];
 
-      const actual = filterIterator(iter, (item): boolean => {
+      const actual = filterIterator(iter, (item: number): boolean => {
         return item % 2 == 0;
       });
 
@@ -279,7 +279,7 @@ describe('filterIterator', () => {
       const iter = set.values();
       const expected = [1, 3, 5];
 
-      const actual = filterIterator(iter, (item): boolean => {
+      const actual = filterIterator(iter, (item: number): boolean => {
         return item % 2 == 1;
       });
 
@@ -291,7 +291,7 @@ describe('filterIterator', () => {
       const iter = set.keys();
       const expected = ['5'];
 
-      const actual = filterIterator(iter, (item): boolean => {
+      const actual = filterIterator(iter, (item: string): boolean => {
         return item === '5';
       });
 
@@ -303,7 +303,7 @@ describe('filterIterator', () => {
       const iter = set.entries();
       const expected = [['1', 1]];
 
-      const actual = filterIterator(iter, ([key, item]): boolean => {
+      const actual = filterIterator(iter, ([key, item]: [string, number]): boolean => {
         return key === '1';
       });
 

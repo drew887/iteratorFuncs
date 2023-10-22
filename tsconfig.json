@@ -12,7 +12,8 @@
     "verbatimModuleSyntax": true,
     "declaration": true,
     "sourceMap": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "noImplicitAny": true
   },
-  "include": ["src/**/*.ts", "test/**/*.test.ts"]
+  "include": ["src/**/*.ts"]
 }
