@@ -66,9 +66,12 @@
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type tsd-kind-type-parameter">TReturn</span></h4>
-<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<div class="tsd-comment tsd-typography">
+<h4>Example</h4><pre><code class="language-typescript"><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">set</span><span class="hl-1">: </span><span class="hl-3">Set</span><span class="hl-1">&lt;</span><span class="hl-3">number</span><span class="hl-1">&gt; = </span><span class="hl-0">new</span><span class="hl-1"> </span><span class="hl-4">Set</span><span class="hl-1">([</span><span class="hl-5">1</span><span class="hl-1">, </span><span class="hl-5">2</span><span class="hl-1">, </span><span class="hl-5">3</span><span class="hl-1">, </span><span class="hl-5">4</span><span class="hl-1">, </span><span class="hl-5">5</span><span class="hl-1">]);</span><br/><br/><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">sum</span><span class="hl-1"> = </span><span class="hl-4">eagerlyReduceIterator</span><span class="hl-1">(</span><br/><span class="hl-1"> </span><span class="hl-6">set</span><span class="hl-1">.</span><span class="hl-4">values</span><span class="hl-1">(),</span><br/><span class="hl-1"> (</span><span class="hl-6">carry</span><span class="hl-1">: </span><span class="hl-3">number</span><span class="hl-1">, </span><span class="hl-6">item</span><span class="hl-1">: </span><span class="hl-3">number</span><span class="hl-1">): </span><span class="hl-3">number</span><span class="hl-1"> </span><span class="hl-0">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">   </span><span class="hl-7">return</span><span class="hl-1"> </span><span class="hl-6">carry</span><span class="hl-1"> + </span><span class="hl-6">item</span><span class="hl-1">;</span><br/><span class="hl-1"> },</span><br/><span class="hl-1"> </span><span class="hl-5">0</span><span class="hl-1">,</span><br/><span class="hl-1">);</span><br/><span class="hl-8">// sum is now 15</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/drew887/iteratorFuncs/blob/c36b66a/src/index.ts#L17">index.ts:17</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/drew887/iteratorFuncs/blob/f74f801/src/index.ts#L38">index.ts:38</a></li></ul></aside></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
