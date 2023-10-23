@@ -1,5 +1,9 @@
 # IteratorFuncs
 
+## Docs
+
+Docs are auto generated and live at [https://drew887.github.io/iteratorFuncs](https://drew887.github.io/iteratorFuncs/modules.html)
+
 ## A tiny package to simplify working with iterators
 
 It has become very common for me in places that I work in to need to be able to do the classic map/reduce/filter/etc
@@ -13,11 +17,7 @@ MPL-2.0 was used so that if need be you can copy the `src/index.ts` or `dist/ind
 projects. Since MPL-2.0 has so-called "file based copyleft" as long as you don't remove the license call out at the top
 of the file and don't make changes to the file itself then you're fine to copy the file into your project as needed.
 
-## Docs
-
-Docs are auto generated and live at [https://drew887.github.io/iteratorFuncs](https://drew887.github.io/iteratorFuncs/modules.html)
-
-### Why not MIT?
+#### Why not MIT?
 
 TLDR, I Wanted to try out MPL-2.0 based things, and while the MIT license would also fit my use case quite well I want
 to keep some level of copyleft to my work. This way anyone can use the file untouched so to speak but if they make any
