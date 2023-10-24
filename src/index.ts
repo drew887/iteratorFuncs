@@ -130,6 +130,23 @@ export function filterIteratorToArray<TValue>(
  * @typeParam TReducerReturn - The return type of your reducer function
  * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
  * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ *
+ * @example
+```typescript
+const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+
+const summingIterator = reduceIterator(
+  set.values(),
+  (carry: number, item: number): number => {
+    return carry + item;
+  },
+  0,
+);
+// summingIterator will now yield the sum for each value seen thus far
+
+const finalValues = Array.from(summingIterator);
+// finalValues will now be [1,3,6,10,15];
+```
  */
 export function reduceIterator<
   TIteratorValue,
@@ -173,13 +190,13 @@ export function reduceIterator<
 /**
  * We override the default Iterable interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
  */
-interface Iterable<TValue, TReturn = any, TNext = any> {
+export interface Iterable<TValue, TReturn = any, TNext = any> {
   [Symbol.iterator](): Iterator<TValue, TReturn, TNext>;
 }
 
 /**
  * We override the default IterableIterator interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
  */
-interface IterableIterator<TValue, TReturn = any, TNext = any> extends Iterator<TValue, TReturn, TNext> {
+export interface IterableIterator<TValue, TReturn = any, TNext = any> extends Iterator<TValue, TReturn, TNext> {
   [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
 }
