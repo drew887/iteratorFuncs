@@ -119,3 +119,67 @@ export function filterIteratorToArray<TValue>(
     [] as Array<TValue>,
   );
 }
+
+/**
+ * Given an Iterable or IterableIterator, a reducer, and an initial value, return a new IterableIterator that yields
+ * values that are automatically piped through said reducer.
+ * @param {Iterable} iterator - The iterator you wish to reduce over
+ * @param {Function} reducer - A function to use to reduce the elements iterator produces
+ * @param {TReducerReturn} initial The initial value to pass to reducer with the first element
+ * @typeParam TIteratorValue - The value returned from the iterator
+ * @typeParam TReducerReturn - The return type of your reducer function
+ * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
+ * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ */
+export function reduceIterator<
+  TIteratorValue,
+  TReducerReturn,
+  TIteratorReturn = TIteratorValue | undefined,
+  TIteratorNext = any,
+>(
+  iterator:
+    | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
+    | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>,
+  reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
+  initial: TReducerReturn,
+): IterableIterator<TReducerReturn> {
+  const iterable = iterator[Symbol.iterator]();
+
+  let state = initial;
+
+  const result: IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> = {
+    [Symbol.iterator](): IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
+      return result;
+    },
+
+    next(args: TIteratorNext): IteratorResult<TReducerReturn, any> {
+      const result = iterable.next(args);
+
+      if (!result.done) {
+        state = reducer(state, result.value);
+      }
+
+      return {
+        done: result.done,
+        value: state,
+      };
+    },
+    //TODO: Determine if we need to implement return and throw function
+  };
+
+  return result;
+}
+
+/**
+ * We override the default Iterable interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
+ */
+interface Iterable<TValue, TReturn = any, TNext = any> {
+  [Symbol.iterator](): Iterator<TValue, TReturn, TNext>;
+}
+
+/**
+ * We override the default IterableIterator interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
+ */
+interface IterableIterator<TValue, TReturn = any, TNext = any> extends Iterator<TValue, TReturn, TNext> {
+  [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
+}

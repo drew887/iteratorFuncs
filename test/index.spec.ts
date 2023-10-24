@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
-import { filterIteratorToArray, mapIteratorToArray, eagerlyReduceIterator } from '../src/index.ts';
+import { eagerlyReduceIterator, filterIteratorToArray, mapIteratorToArray, reduceIterator } from '../src/index.ts';
 
 describe('greedy versions', () => {
   describe('eagerlyReduceIterator', () => {
@@ -334,6 +334,93 @@ describe('greedy versions', () => {
 
         assert.strictEqual(iter.next().done, true, 'marks as done');
         assert.deepEqual(actual, expected, "Filters over the Map's entries as expected");
+      });
+    });
+  });
+});
+
+describe('composition versions', () => {
+  describe('reduceIterator', () => {
+    describe('over Generators', () => {
+      const generator = function* () {
+        for (let i = 1; i <= 5; i++) {
+          yield i;
+        }
+
+        return;
+      };
+
+      let iter: Generator<number, void>;
+
+      beforeEach(() => {
+        iter = generator();
+      });
+
+      it('should return another iterator', () => {
+        const actual = reduceIterator(iter, () => {}, undefined);
+
+        assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
+      });
+
+      it('should yield all reduced values', () => {
+        const actual = reduceIterator(
+          iter,
+          (carry, item) => {
+            return carry + item;
+          },
+          0,
+        );
+        const expected = [1, 3, 6, 10, 15];
+
+        const results = [];
+        for (const item of actual) {
+          results.push(item);
+        }
+
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields the right numbers');
+      });
+
+      it('should pass back values to generator when a value is passed to next', () => {
+        const generator = function* (): Generator<number, any, number> {
+          const result = yield 5;
+          assert.strictEqual(result, 10, 'got passed back the value passed to next');
+        };
+
+        const actual = reduceIterator(
+          generator(),
+          (carry, arg) => {
+            return carry + arg;
+          },
+          0,
+        );
+
+        const expected = [5];
+
+        const results = [];
+        let next = actual.next();
+        while (!next.done) {
+          results.push(next.value);
+          next = actual.next(10);
+        }
+
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields all the right values');
+      });
+
+      it('should bail early if iterator throws', () => {
+        const err = new Error('failed Generator!');
+        const failingGenerator = function* () {
+          yield 5;
+          throw err;
+        };
+
+        const actual = reduceIterator(failingGenerator(), () => {}, undefined);
+
+        assert.throws(() => {
+          for (const a of actual) {
+          }
+        }, err);
       });
     });
   });
