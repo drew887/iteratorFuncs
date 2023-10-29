@@ -14,6 +14,28 @@
 //TODO: Make non greedy versions
 
 /**
+ * We override the default Iterable interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
+ */
+export interface Iterable<TValue, TReturn = any, TNext = any> {
+  [Symbol.iterator](): Iterator<TValue, TReturn, TNext>;
+}
+
+/**
+ * We override the default IterableIterator interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
+ */
+export interface IterableIterator<TValue, TReturn = any, TNext = any> extends Iterator<TValue, TReturn, TNext> {
+  [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
+}
+
+/**
+ * Type alias to simplify this union
+ * TODO: Come up with a better name
+ */
+export type IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext> =
+  | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
+  | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
+
+/**
  * Given an iterator, eagerly reduce over its results until it finishes and return the result
  * @param {Iterable} iterator - The iterator you wish to reduce over
  * @param {Function} reducer - A function to use to reduce the elements iterator produces
@@ -154,9 +176,7 @@ export function reduceIterator<
   TIteratorReturn = TIteratorValue | undefined,
   TIteratorNext = any,
 >(
-  iterator:
-    | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
-    | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>,
+  iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
   reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
   initial: TReducerReturn,
 ): IterableIterator<TReducerReturn> {
@@ -169,17 +189,19 @@ export function reduceIterator<
       return result;
     },
 
-    next(args: TIteratorNext): IteratorResult<TReducerReturn, any> {
+    next(args: TIteratorNext): IteratorResult<TReducerReturn, TIteratorReturn> {
       const result = iterable.next(args);
 
       if (!result.done) {
         state = reducer(state, result.value);
+
+        return {
+          ...result,
+          value: state,
+        };
       }
 
-      return {
-        done: result.done,
-        value: state,
-      };
+      return result;
     },
     //TODO: Determine if we need to implement return and throw function
   };
@@ -187,16 +209,36 @@ export function reduceIterator<
   return result;
 }
 
-/**
- * We override the default Iterable interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
- */
-export interface Iterable<TValue, TReturn = any, TNext = any> {
-  [Symbol.iterator](): Iterator<TValue, TReturn, TNext>;
-}
+export function mapIterator<
+  TIteratorValue,
+  TMapperReturn,
+  TIteratorReturn = TIteratorValue | undefined,
+  TIteratorNext = any,
+>(
+  iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
+  mapper: (arg: TIteratorValue) => TMapperReturn,
+): IterableIterator<TMapperReturn> {
+  // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
+  const iterable = iterator[Symbol.iterator]();
 
-/**
- * We override the default IterableIterator interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
- */
-export interface IterableIterator<TValue, TReturn = any, TNext = any> extends Iterator<TValue, TReturn, TNext> {
-  [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
+  const result: IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> = {
+    [Symbol.iterator](): IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
+      return result;
+    },
+
+    next(args: TIteratorNext): IteratorResult<TMapperReturn, TIteratorReturn> {
+      const result = iterable.next(args);
+
+      if (!result.done) {
+        return {
+          ...result,
+          value: mapper(result.value),
+        };
+      }
+
+      return result;
+    },
+  };
+
+  return result;
 }

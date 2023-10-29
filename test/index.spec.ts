@@ -6,7 +6,13 @@
 
 import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
-import { eagerlyReduceIterator, filterIteratorToArray, mapIteratorToArray, reduceIterator } from '../src/index.ts';
+import {
+  eagerlyReduceIterator,
+  filterIteratorToArray,
+  mapIterator,
+  mapIteratorToArray,
+  reduceIterator,
+} from '../src/index.ts';
 
 describe('greedy versions', () => {
   describe('eagerlyReduceIterator', () => {
@@ -382,9 +388,11 @@ describe('composition versions', () => {
       });
 
       it('should pass back values to generator when a value is passed to next', () => {
+        let done = false;
         const generator = function* (): Generator<number, any, number> {
           const result = yield 5;
           assert.strictEqual(result, 10, 'got passed back the value passed to next');
+          done = true;
         };
 
         const actual = reduceIterator(
@@ -405,6 +413,7 @@ describe('composition versions', () => {
         }
 
         assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.strictEqual(done, true, 'got to the end of the generator function');
         assert.deepEqual(results, expected, 'yields all the right values');
       });
 
@@ -419,9 +428,101 @@ describe('composition versions', () => {
 
         assert.throws(() => {
           for (const a of actual) {
+            //empty on purpose
           }
         }, err);
       });
     });
   });
+
+  describe('mapIterator', () => {
+    describe('generators', () => {
+      let iter: Generator<number, void>;
+
+      const generator = function* () {
+        for (let i = 1; i <= 5; i++) {
+          yield i;
+        }
+
+        return;
+      };
+
+      beforeEach(() => {
+        iter = generator();
+      });
+
+      it('should return another iterator', () => {
+        const actual = mapIterator(iter, () => {});
+
+        assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
+      });
+
+      it('should yield all mapped values', () => {
+        const actual = mapIterator(iter, (item) => {
+          return item * 2;
+        });
+        const expected = [2, 4, 6, 8, 10];
+
+        const results = [];
+        for (const item of actual) {
+          results.push(item);
+        }
+
+        //TODO: add assert and a mock that closure passed is called the right number of times
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields the mapped values');
+      });
+
+      it('should pass back values to generator when a value is passed to next', () => {
+        let done = false;
+        const generator = function* (): Generator<number, any, number> {
+          const result = yield 5;
+          assert.strictEqual(result, 10, 'got passed back the value passed to next');
+          done = true;
+        };
+
+        const actual = mapIterator(generator(), (arg) => {
+          return arg + 1;
+        });
+
+        const expected = [6];
+
+        const results = [];
+        let next = actual.next();
+        while (!next.done) {
+          results.push(next.value);
+          next = actual.next(10);
+        }
+
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.strictEqual(done, true, 'got to the end of the generator function');
+        assert.deepEqual(results, expected, 'yields the expected value, still run through mapper function');
+      });
+
+      it('should bail early if iterator throws', () => {
+        const err = new Error('failed Generator!');
+        const failingGenerator = function* () {
+          yield 5;
+          throw err;
+        };
+
+        const actual = mapIterator(failingGenerator(), () => {});
+
+        assert.throws(() => {
+          for (const a of actual) {
+            //empty on purpose
+          }
+        }, err);
+      });
+    });
+  });
+});
+
+describe.todo('async iterators', () => {});
+
+describe.todo('multiple chained calls fuse', () => {
+  it.todo(
+    "should when called again on an instance we've made, then just add a ref to the fun, not make a new instance",
+    () => {},
+  );
 });
