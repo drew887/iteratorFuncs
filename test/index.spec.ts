@@ -8,6 +8,7 @@ import { beforeEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import {
   eagerlyReduceIterator,
+  filterIterator,
   filterIteratorToArray,
   mapIterator,
   mapIteratorToArray,
@@ -509,6 +510,92 @@ describe('composition versions', () => {
         };
 
         const actual = mapIterator(failingGenerator(), () => {});
+
+        assert.throws(() => {
+          for (const a of actual) {
+            //empty on purpose
+          }
+        }, err);
+      });
+    });
+  });
+
+  describe('filterIterator', () => {
+    describe('generators', () => {
+      let iter: Generator<number, void>;
+      const iterLength = 5;
+
+      const generator = function* () {
+        for (let i = 1; i <= iterLength; i++) {
+          yield i;
+        }
+
+        return;
+      };
+
+      beforeEach(() => {
+        iter = generator();
+      });
+
+      it('should return another iterator', () => {
+        const actual = filterIterator(iter, () => {
+          return true;
+        });
+
+        assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
+      });
+
+      it('should yield all mapped values', () => {
+        const filter = mock.fn((item: number) => {
+          return item % 2 == 0;
+        });
+
+        const actual = filterIterator(iter, filter);
+        const expected = [2, 4];
+
+        const results = [];
+        for (const item of actual) {
+          results.push(item);
+        }
+
+        //TODO: add assert and a mock that closure passed is called the right number of times
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields only the values that pass the filter');
+        assert.strictEqual(filter.mock.callCount(), iterLength, 'filter func gets called only once for each item');
+      });
+
+      it('should pass back values to generator when a value is passed to next', () => {
+        let done = false;
+        const generator = function* (): Generator<number, any, number> {
+          const result = yield 5;
+          assert.strictEqual(result, 10, 'got passed back the value passed to next');
+          done = true;
+        };
+
+        const actual = filterIterator(generator(), () => true);
+
+        const expected = [5];
+
+        const results = [];
+        let next = actual.next();
+        while (!next.done) {
+          results.push(next.value);
+          next = actual.next(10);
+        }
+
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.strictEqual(done, true, 'got to the end of the generator function');
+        assert.deepEqual(results, expected, 'yields the expected value, still run through mapper function');
+      });
+
+      it('should bail early if iterator throws', () => {
+        const err = new Error('failed Generator!');
+        const failingGenerator = function* () {
+          yield 5;
+          throw err;
+        };
+
+        const actual = filterIterator(failingGenerator(), () => true);
 
         assert.throws(() => {
           for (const a of actual) {

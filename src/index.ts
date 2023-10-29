@@ -242,3 +242,33 @@ export function mapIterator<
 
   return result;
 }
+
+/**
+ * TODO: Add docs around how passing values to next will use the same value till one is yielded that passes the filter
+ * @param iterator
+ * @param filter
+ */
+export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue | undefined, TIteratorNext = any>(
+  iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
+  filter: (arg: TIteratorValue) => boolean,
+): IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
+  const iterable = iterator[Symbol.iterator]();
+
+  const result: IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> = {
+    [Symbol.iterator](): IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
+      return result;
+    },
+
+    next(args: TIteratorNext): IteratorResult<TIteratorValue, TIteratorReturn> {
+      let result = iterable.next(args);
+
+      while (!result.done && !filter(result.value)) {
+        result = iterable.next(args);
+      }
+
+      return result;
+    },
+  };
+
+  return result;
+}
