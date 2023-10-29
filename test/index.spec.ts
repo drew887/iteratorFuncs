@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { beforeEach, describe, it } from 'node:test';
+import { beforeEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import {
   eagerlyReduceIterator,
@@ -369,13 +369,11 @@ describe('composition versions', () => {
       });
 
       it('should yield all reduced values', () => {
-        const actual = reduceIterator(
-          iter,
-          (carry, item) => {
-            return carry + item;
-          },
-          0,
-        );
+        const reducer = mock.fn((carry, item) => {
+          return carry + item;
+        });
+
+        const actual = reduceIterator(iter, reducer, 0);
         const expected = [1, 3, 6, 10, 15];
 
         const results = [];
@@ -385,6 +383,7 @@ describe('composition versions', () => {
 
         assert.strictEqual(actual.next().done, true, 'iterator marks done');
         assert.deepEqual(results, expected, 'yields the right numbers');
+        assert.strictEqual(reducer.mock.callCount(), expected.length, 'reducer func gets called once for each item');
       });
 
       it('should pass back values to generator when a value is passed to next', () => {
@@ -458,9 +457,11 @@ describe('composition versions', () => {
       });
 
       it('should yield all mapped values', () => {
-        const actual = mapIterator(iter, (item) => {
+        const mapper = mock.fn((item: number) => {
           return item * 2;
         });
+
+        const actual = mapIterator(iter, mapper);
         const expected = [2, 4, 6, 8, 10];
 
         const results = [];
@@ -471,6 +472,7 @@ describe('composition versions', () => {
         //TODO: add assert and a mock that closure passed is called the right number of times
         assert.strictEqual(actual.next().done, true, 'iterator marks done');
         assert.deepEqual(results, expected, 'yields the mapped values');
+        assert.strictEqual(mapper.mock.callCount(), expected.length, 'mapper func gets called only once for each item');
       });
 
       it('should pass back values to generator when a value is passed to next', () => {
