@@ -545,7 +545,7 @@ describe('composition versions', () => {
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
       });
 
-      it('should yield all mapped values', () => {
+      it('should yield only values that pass the filter', () => {
         const filter = mock.fn((item: number) => {
           return item % 2 == 0;
         });
@@ -602,6 +602,25 @@ describe('composition versions', () => {
             //empty on purpose
           }
         }, err);
+      });
+    });
+
+    describe('Sets', () => {
+      const set = new Set([1, 2, 3, 4, 5]);
+
+      it('should yield only values that pass the filter', () => {
+        const filter = mock.fn((item: number) => {
+          return item % 2 == 0;
+        });
+
+        const actual = filterIterator(set, filter);
+        const expected = [2, 4];
+        const results = Array.from(actual);
+
+        //TODO: add assert and a mock that closure passed is called the right number of times
+        assert.strictEqual(actual.next().done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields only the values that pass the filter');
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter func gets called once for each item');
       });
     });
   });

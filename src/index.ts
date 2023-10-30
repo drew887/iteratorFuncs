@@ -1,7 +1,26 @@
 /**
  * IteratorFuncs a simple single file package to make working with JS iterators easier.
  *
- * For more information please see the documentation [here](https://drew887.github.io/iteratorFuncs/modules.html).
+ * The documentation lives online [here](https://drew887.github.io/iteratorFuncs/modules.html).
+ *
+ * If you've ever had a generator, or a Set, or a Map that you've needed to map/filter/reduce over in JS, you've been hit
+ * by the pain of having to either convert to an Array with `Array.from` and then use the method you need, or write a
+ * for...of loop and do your logic in there.
+ *
+ * While the for...of loop is almost certainly the "proper" or "js way" of doing things, and is what you normally get as
+ * an answer when searching for this, it can be a little disappointing or jarring for those of us wanting a more fp like
+ * approach that js normally lets you take.
+ *
+ * So this package is simply to help facilitate these patterns for IterableIterators.
+ *
+ * tldr:
+```typescript
+const set = new Set([1, 2, 3, 4, 5]);
+const mapped = mapIterator(set, (item) => item * 2);
+
+console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
+```
+ *
  * @packageDocumentation
  */
 
@@ -10,8 +29,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
-//TODO: Make non greedy versions
 
 /**
  * We override the default Iterable interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
@@ -179,7 +196,7 @@ export function reduceIterator<
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
   reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
   initial: TReducerReturn,
-): IterableIterator<TReducerReturn> {
+): IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
   const iterable = iterator[Symbol.iterator]();
 
   let state = initial;
@@ -209,6 +226,24 @@ export function reduceIterator<
   return result;
 }
 
+/**
+ * Given an IteratorArg and a mapping function, returns a new IterableIterator that yields values from the initial iterator
+ * but passed through the mapping function.
+ * @param {Iterable} iterator - The iterator you wish to map elements from
+ * @param {Function} mapper - A function to use to map the elements iterator produces
+ * @typeParam TIteratorValue - The value returned from the iterator
+ * @typeParam TMapperReturn - The return type of your reducer function
+ * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
+ * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ * @example
+```typescript
+const set = new Set([1, 2, 3, 4, 5]);
+
+const mapped = mapIterator(set, (item) => item * 2);
+
+console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
+```
+ */
 export function mapIterator<
   TIteratorValue,
   TMapperReturn,
@@ -217,7 +252,7 @@ export function mapIterator<
 >(
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
   mapper: (arg: TIteratorValue) => TMapperReturn,
-): IterableIterator<TMapperReturn> {
+): IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
   const iterable = iterator[Symbol.iterator]();
 
@@ -244,9 +279,26 @@ export function mapIterator<
 }
 
 /**
- * TODO: Add docs around how passing values to next will use the same value till one is yielded that passes the filter
- * @param iterator
- * @param filter
+ * Given an IteratorArg and a filtering function it will return a new IterableIterator that when polled will eagerly pull
+ * values from iterator and pass them to filter until filter returns true for an item or we reach the end of iterator; it
+ * will then yield this value itself.
+ *
+ * **NOTE:** if iterator relies on values being passed to next, the returned IterableIterator will re-use the same next
+ * value until an item is raised that passes the filter. This can lead to strange behaviours.
+ * @param {Iterable} iterator - The iterator you wish to map elements from
+ * @param {Function} filter - A function to use to map the elements iterator produces
+ * @typeParam TIteratorValue - The value returned from the iterator
+ * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
+ * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ *
+ * @example
+```typescript
+const set = new Set([1, 2, 3, 4, 5]);
+
+const filtered = filterIterator(set, (item) => item % 2 === 0);
+
+console.log(Array.from(filtered)); // logs out [2, 4]
+```
  */
 export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue | undefined, TIteratorNext = any>(
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
