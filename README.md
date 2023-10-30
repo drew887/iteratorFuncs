@@ -1,5 +1,14 @@
 # IteratorFuncs
 
+tldr:
+
+```typescript
+const set = new Set([1, 2, 3, 4, 5]);
+const mapped = mapIterator(set, (item) => item * 2);
+
+console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
+```
+
 ## Docs
 
 Docs are auto generated and live at [https://drew887.github.io/iteratorFuncs](https://drew887.github.io/iteratorFuncs/modules.html)
