@@ -14,7 +14,17 @@
 <h2>@drew887121/iteratorfuncs</h2></div>
 <section class="tsd-panel tsd-comment">
 <div class="tsd-comment tsd-typography"><p>IteratorFuncs a simple single file package to make working with JS iterators easier.</p>
-<p>For more information please see the documentation <a href="https://drew887.github.io/iteratorFuncs/modules.html">here</a>.</p>
+<p>The documentation lives online <a href="https://drew887.github.io/iteratorFuncs/modules.html">here</a>.</p>
+<p>If you&#39;ve ever had a generator, or a Set, or a Map that you&#39;ve needed to map/filter/reduce over in JS, you&#39;ve been hit
+by the pain of having to either convert to an Array with <code>Array.from</code> and then use the method you need, or write a
+for...of loop and do your logic in there.</p>
+<p>While the for...of loop is almost certainly the &quot;proper&quot; or &quot;js way&quot; of doing things, and is what you normally get as
+an answer when searching for this, it can be a little disappointing or jarring for those of us wanting a more fp like
+approach that js normally lets you take.</p>
+<p>So this package is simply to help facilitate these patterns for IterableIterators.</p>
+<p>tldr:</p>
+<pre><code class="language-typescript"><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">set</span><span class="hl-1"> = </span><span class="hl-0">new</span><span class="hl-1"> </span><span class="hl-3">Set</span><span class="hl-1">([</span><span class="hl-4">1</span><span class="hl-1">, </span><span class="hl-4">2</span><span class="hl-1">, </span><span class="hl-4">3</span><span class="hl-1">, </span><span class="hl-4">4</span><span class="hl-1">, </span><span class="hl-4">5</span><span class="hl-1">]);</span><br/><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">mapped</span><span class="hl-1"> = </span><span class="hl-3">mapIterator</span><span class="hl-1">(</span><span class="hl-5">set</span><span class="hl-1">, (</span><span class="hl-5">item</span><span class="hl-1">) </span><span class="hl-0">=&gt;</span><span class="hl-1"> </span><span class="hl-5">item</span><span class="hl-1"> * </span><span class="hl-4">2</span><span class="hl-1">);</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-3">log</span><span class="hl-1">(</span><span class="hl-5">Array</span><span class="hl-1">.</span><span class="hl-3">from</span><span class="hl-1">(</span><span class="hl-5">mapped</span><span class="hl-1">)); </span><span class="hl-6">// logs out [2, 4, 6, 8, 10]</span>
+</code><button>Copy</button></pre>
 </div>
 <div class="tsd-comment tsd-typography"></div></section>
 <section class="tsd-panel-group tsd-index-group">
@@ -26,9 +36,15 @@
 <a href="interfaces/IterableIterator.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Iterable<wbr/>Iterator</span></a>
 </div></section>
 <section class="tsd-index-section">
+<h3 class="tsd-index-heading">Type Aliases</h3>
+<div class="tsd-index-list"><a href="types/IteratorArg.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Iterator<wbr/>Arg</span></a>
+</div></section>
+<section class="tsd-index-section">
 <h3 class="tsd-index-heading">Functions</h3>
 <div class="tsd-index-list"><a href="functions/eagerlyReduceIterator.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>eagerly<wbr/>Reduce<wbr/>Iterator</span></a>
+<a href="functions/filterIterator.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>filter<wbr/>Iterator</span></a>
 <a href="functions/filterIteratorToArray.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>filter<wbr/>Iterator<wbr/>To<wbr/>Array</span></a>
+<a href="functions/mapIterator.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>map<wbr/>Iterator</span></a>
 <a href="functions/mapIteratorToArray.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>map<wbr/>Iterator<wbr/>To<wbr/>Array</span></a>
 <a href="functions/reduceIterator.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>reduce<wbr/>Iterator</span></a>
 </div></section></section></section></div>
@@ -52,8 +68,11 @@
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base=".">
 <li><a href="interfaces/Iterable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg>Iterable</a></li>
 <li><a href="interfaces/IterableIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg>IterableIterator</a></li>
+<li><a href="types/IteratorArg.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg>IteratorArg</a></li>
 <li><a href="functions/eagerlyReduceIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg>eagerlyReduceIterator</a></li>
+<li><a href="functions/filterIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg>filterIterator</a></li>
 <li><a href="functions/filterIteratorToArray.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg>filterIteratorToArray</a></li>
+<li><a href="functions/mapIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg>mapIterator</a></li>
 <li><a href="functions/mapIteratorToArray.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg>mapIteratorToArray</a></li>
 <li><a href="functions/reduceIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg>reduceIterator</a></li></ul></nav></div></div></div>
 <div class="tsd-generator">
