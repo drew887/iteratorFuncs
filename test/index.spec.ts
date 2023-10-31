@@ -628,9 +628,30 @@ describe('composition versions', () => {
 
 describe.todo('async iterators', () => {});
 
-describe.todo('multiple chained calls fuse', () => {
-  it.todo(
-    "should when called again on an instance we've made, then just add a ref to the fun, not make a new instance",
-    () => {},
-  );
+describe('combinations', () => {
+  describe.todo('multiple chained calls fuse', () => {
+    it.todo(
+      "should when called again on an instance we've made, then just add a ref to the fun, not make a new instance",
+      () => {},
+    );
+  });
+
+  it('chaining map into filter should work', () => {
+    const set = new Set([1, 2, 3, 4, 5]);
+    const mapper = mock.fn((item: number) => item * 2);
+    const filter = mock.fn((item: number) => item > 5);
+
+    const mapped = mapIterator(set, mapper);
+    const filtered = filterIterator(mapped, filter);
+
+    assert.strictEqual(mapper.mock.callCount(), 0, "mapper isn't called before values are yielded");
+    assert.strictEqual(filter.mock.callCount(), 0, "filter isn't called before values are yielded");
+
+    const expected = [6, 8, 10];
+    const result = Array.from(filtered);
+
+    assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+    assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+    assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+  });
 });
