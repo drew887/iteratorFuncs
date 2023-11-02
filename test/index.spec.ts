@@ -10,6 +10,7 @@ import {
   eagerlyReduceIterator,
   filterIterator,
   filterIteratorToArray,
+  IteratorSym,
   mapIterator,
   mapIteratorToArray,
   reduceIterator,
@@ -369,6 +370,12 @@ describe('composition versions', () => {
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
       });
 
+      it('should have the symbol set', () => {
+        const actual = reduceIterator(iter, () => {}, undefined);
+
+        assert.strictEqual((actual as any)[IteratorSym], true, 'returned object has our symbol set');
+      });
+
       it('should yield all reduced values', () => {
         const reducer = mock.fn((carry, item) => {
           return carry + item;
@@ -457,6 +464,12 @@ describe('composition versions', () => {
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
       });
 
+      it('should have the symbol set', () => {
+        const actual = mapIterator(iter, () => {});
+
+        assert.strictEqual((actual as any)[IteratorSym], true, 'returned object has our symbol set');
+      });
+
       it('should yield all mapped values', () => {
         const mapper = mock.fn((item: number) => {
           return item * 2;
@@ -543,6 +556,14 @@ describe('composition versions', () => {
         });
 
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
+      });
+
+      it('should have the symbol set', () => {
+        const actual = filterIterator(iter, () => {
+          return true;
+        });
+
+        assert.strictEqual((actual as any)[IteratorSym], true, 'returned object has our symbol set');
       });
 
       it('should yield only values that pass the filter', () => {

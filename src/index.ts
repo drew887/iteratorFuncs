@@ -44,6 +44,16 @@ export interface IterableIterator<TValue, TReturn = any, TNext = any> extends It
   [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
 }
 
+export const IteratorSym = Symbol('IteratorSym');
+
+/**
+ * Represents an iterator object we return
+ */
+export interface AugmentedIterator<TValue, TReturn = any, TNext = any>
+  extends IterableIterator<TValue, TReturn, TNext> {
+  [IteratorSym]: true;
+}
+
 /**
  * Type alias to simplify this union
  * TODO: Come up with a better name
@@ -201,7 +211,9 @@ export function reduceIterator<
 
   let state = initial;
 
-  const result: IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> = {
+  const result: AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> = {
+    [IteratorSym]: true,
+
     [Symbol.iterator](): IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
       return result;
     },
@@ -256,7 +268,9 @@ export function mapIterator<
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
   const iterable = iterator[Symbol.iterator]();
 
-  const result: IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> = {
+  const result: AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> = {
+    [IteratorSym]: true,
+
     [Symbol.iterator](): IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
       return result;
     },
@@ -306,7 +320,9 @@ export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue 
 ): IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
   const iterable = iterator[Symbol.iterator]();
 
-  const result: IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> = {
+  const result: AugmentedIterator<TIteratorValue, TIteratorReturn, TIteratorNext> = {
+    [IteratorSym]: true,
+
     [Symbol.iterator](): IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
       return result;
     },
