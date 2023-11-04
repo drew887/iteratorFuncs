@@ -44,16 +44,12 @@ export interface IterableIterator<TValue, TReturn = any, TNext = any> extends It
   [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
 }
 
-export const IteratorSym = Symbol('IteratorSym');
-
 /**
  * Represents an iterator object we return
  */
 export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
   implements IterableIterator<TValue, TReturn, TNext>
 {
-  [IteratorSym] = true as const;
-
   [Symbol.iterator](): this {
     return this;
   }
