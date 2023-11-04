@@ -632,58 +632,108 @@ describe.todo('async iterators', () => {});
 
 describe('combinations', () => {
   describe('returned instances have helper methods to chain', () => {
-    describe('.map', () => {
-      describe('should have a .map method that chains a map call', () => {
-        test('filterIterator', () => {
-          const set = new Set([1, 2, 3, 4, 5]);
-          const mapper = mock.fn((item: number) => item * 2);
-          const filter = mock.fn((item: number) => item > 2);
+    describe('should have a .map method that chains a map call', () => {
+      test('filterIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const filter = mock.fn((item: number) => item > 2);
 
-          const filteredAndMapped = filterIterator(set, filter).map(mapper);
+        const filteredAndMapped = filterIterator(set, filter).map(mapper);
 
-          const expected = [6, 8, 10];
-          const result = Array.from(filteredAndMapped);
+        const expected = [6, 8, 10];
+        const result = Array.from(filteredAndMapped);
 
-          assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
-          assert.strictEqual(
-            mapper.mock.callCount(),
-            expected.length,
-            'mapper only gets called once for the values that passed filter',
-          );
-          assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.strictEqual(
+          mapper.mock.callCount(),
+          expected.length,
+          'mapper only gets called once for the values that passed filter',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+      });
+      test('mapIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper1 = mock.fn((item: number) => item * 2);
+        const mapper2 = mock.fn((item: number) => `${item}`);
+
+        //also subtly tests that TS enforces types here
+        const doubleMapped = mapIterator(set, mapper1).map(mapper2);
+
+        const expected = ['2', '4', '6', '8', '10'];
+        const result = Array.from(doubleMapped);
+
+        assert.strictEqual(doubleMapped.next().done, true, 'iterator is marked done');
+        assert.strictEqual(mapper1.mock.callCount(), set.size, 'mapper1 gets called once for every instance');
+        assert.strictEqual(mapper2.mock.callCount(), set.size, 'mapper2 gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is all values passed through both mappers');
+      });
+      test('reduceIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const reducer = mock.fn((carry, item) => {
+          return carry + item;
         });
-        test('mapIterator', () => {
-          const set = new Set([1, 2, 3, 4, 5]);
-          const mapper1 = mock.fn((item: number) => item * 2);
-          const mapper2 = mock.fn((item: number) => `${item}`);
+        const mapper = mock.fn((item: number) => `${item}`);
 
-          //also subtly tests that TS enforces types here
-          const doubleMapped = mapIterator(set, mapper1).map(mapper2);
+        const mappedReducer = reduceIterator(set, reducer, 0).map(mapper);
 
-          const expected = ['2', '4', '6', '8', '10'];
-          const result = Array.from(doubleMapped);
+        const expected = ['1', '3', '6', '10', '15'];
+        const result = Array.from(mappedReducer);
 
-          assert.strictEqual(doubleMapped.next().done, true, 'iterator is marked done');
-          assert.strictEqual(mapper1.mock.callCount(), set.size, 'mapper1 gets called once for every instance');
-          assert.strictEqual(mapper2.mock.callCount(), set.size, 'mapper2 gets called once for every instance');
-          assert.deepEqual(result, expected, 'Final result is all values passed through both mappers');
+        assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+        assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is all values passed through both functions');
+      });
+    });
+    describe('should have a .filter method that chains a filter call', () => {
+      test('reduceIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const reducer = mock.fn((carry, item) => {
+          return carry + item;
         });
-        test('reduceIterator', () => {
-          const set = new Set([1, 2, 3, 4, 5]);
-          const reducer = mock.fn((carry, item) => {
-            return carry + item;
-          });
-          const mapper = mock.fn((item: number) => `${item}`);
+        const filter = mock.fn((item: number) => item > 5);
 
-          const mappedReducer = reduceIterator(set, reducer, 0).map(mapper);
+        const filteredReducer = reduceIterator(set, reducer, 0).filter(filter);
 
-          const expected = ['1', '3', '6', '10', '15'];
-          const result = Array.from(mappedReducer);
+        const expected = [6, 10, 15];
+        const result = Array.from(filteredReducer);
 
-          assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
-          assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
-          assert.deepEqual(result, expected, 'Final result is all values passed through both functions');
-        });
+        assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is the reduced values that pass the filter');
+      });
+      test('mapIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const filter = mock.fn((item: number) => item > 5);
+
+        //also subtly tests that TS enforces types here
+        const doubleMapped = mapIterator(set, mapper).filter(filter);
+
+        const expected = [6, 8, 10];
+        const result = Array.from(doubleMapped);
+
+        assert.strictEqual(doubleMapped.next().done, true, 'iterator is marked done');
+        assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is mapped values that pass the filter');
+      });
+      test('filterIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const filter2 = mock.fn((item: number) => item % 2 === 0);
+        const filter1 = mock.fn((item: number) => item > 2);
+
+        const doubleFiltered = filterIterator(set, filter1).filter(filter2);
+
+        const expected = [4];
+        const result = Array.from(doubleFiltered);
+
+        assert.strictEqual(filter1.mock.callCount(), set.size, 'filter1 gets called once for every instance');
+        assert.strictEqual(
+          filter2.mock.callCount(),
+          3,
+          'filter2 only gets called once for the values that passed filter1',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the values that passed both filters');
       });
     });
   });

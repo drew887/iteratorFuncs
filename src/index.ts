@@ -180,6 +180,10 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
   map<TMapperReturn>(mapper: (item: TValue) => TMapperReturn): AugmentedIterator<TMapperReturn, TReturn, TNext> {
     return mapIterator(this, mapper);
   }
+
+  filter(filter: (item: TValue) => boolean): AugmentedIterator<TValue, TReturn, TNext> {
+    return filterIterator(this, filter);
+  }
 }
 
 /**
