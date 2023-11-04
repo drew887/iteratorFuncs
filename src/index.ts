@@ -45,23 +45,6 @@ export interface IterableIterator<TValue, TReturn = any, TNext = any> extends It
 }
 
 /**
- * Represents an iterator object we return
- */
-export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
-  implements IterableIterator<TValue, TReturn, TNext>
-{
-  [Symbol.iterator](): this {
-    return this;
-  }
-
-  abstract next(...args: [] | [TNext]): IteratorResult<TValue, TReturn>;
-
-  map<TMapperReturn>(mapper: (item: TValue) => TMapperReturn): AugmentedIterator<TMapperReturn, TReturn, TNext> {
-    return mapIterator(this, mapper);
-  }
-}
-
-/**
  * Type alias to simplify this union
  * TODO: Come up with a better name
  */
@@ -176,6 +159,29 @@ export function filterIteratorToArray<TValue>(
   );
 }
 
+//  =============      Non Eager Versions       ================
+
+/**
+ * An AugmentedIterator represents one of the IterableIterators we return.
+ * Simply implement a next method that wraps up the logic for dealing with the values (ie calling the mapper function)
+ * and we take care of the rest.
+ *
+ * Should be only implemented internally
+ */
+export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
+  implements IterableIterator<TValue, TReturn, TNext>
+{
+  [Symbol.iterator](): this {
+    return this;
+  }
+
+  abstract next(...args: [] | [TNext]): IteratorResult<TValue, TReturn>;
+
+  map<TMapperReturn>(mapper: (item: TValue) => TMapperReturn): AugmentedIterator<TMapperReturn, TReturn, TNext> {
+    return mapIterator(this, mapper);
+  }
+}
+
 /**
  * Given an Iterable or IterableIterator, a reducer, and an initial value, return a new IterableIterator that yields
  * values that are automatically piped through said reducer.
@@ -215,7 +221,6 @@ export function reduceIterator<
   initial: TReducerReturn,
 ): AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
   const iterable = iterator[Symbol.iterator]();
-
   let state = initial;
 
   return new (class extends AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
