@@ -183,6 +183,41 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
 }
 
 /**
+ * This is a private class for encapsulating the logic for reducing.
+ */
+class _ReducingIterator<TIteratorValue, TReducerReturn, TIteratorReturn, TIteratorNext> extends AugmentedIterator<
+  TReducerReturn,
+  TIteratorReturn,
+  TIteratorNext
+> {
+  private iterable: Iterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
+
+  constructor(
+    iterable: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
+    private reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
+    private state: TReducerReturn,
+  ) {
+    super();
+    this.iterable = iterable[Symbol.iterator]();
+  }
+
+  next(...args: [] | [TIteratorNext]): IteratorResult<TReducerReturn, TIteratorReturn> {
+    const result = this.iterable.next(...args);
+
+    if (!result.done) {
+      this.state = this.reducer(this.state, result.value);
+
+      return {
+        ...result,
+        value: this.state,
+      };
+    }
+
+    return result;
+  }
+}
+
+/**
  * Given an Iterable or IterableIterator, a reducer, and an initial value, return a new IterableIterator that yields
  * values that are automatically piped through said reducer.
  * @param {Iterable} iterator - The iterator you wish to reduce over
@@ -220,25 +255,7 @@ export function reduceIterator<
   reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
   initial: TReducerReturn,
 ): AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
-  const iterable = iterator[Symbol.iterator]();
-  let state = initial;
-
-  return new (class extends AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
-    next(...args: [] | [TIteratorNext]): IteratorResult<TReducerReturn, TIteratorReturn> {
-      const result = iterable.next(...args);
-
-      if (!result.done) {
-        state = reducer(state, result.value);
-
-        return {
-          ...result,
-          value: state,
-        };
-      }
-
-      return result;
-    }
-  })();
+  return new _ReducingIterator(iterator, reducer, initial);
 }
 
 /**

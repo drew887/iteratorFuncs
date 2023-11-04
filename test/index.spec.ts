@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { beforeEach, describe, it, mock } from 'node:test';
+import { beforeEach, describe, it, mock, test } from 'node:test';
 import assert from 'node:assert';
 import {
   eagerlyReduceIterator,
@@ -633,26 +633,57 @@ describe.todo('async iterators', () => {});
 describe('combinations', () => {
   describe('returned instances have helper methods to chain', () => {
     describe('.map', () => {
-      it('should have a .map method that chains a map call', () => {
-        const set = new Set([1, 2, 3, 4, 5]);
-        const mapper = mock.fn((item: number) => item * 2);
-        const filter = mock.fn((item: number) => item > 2);
+      describe('should have a .map method that chains a map call', () => {
+        test('filterIterator', () => {
+          const set = new Set([1, 2, 3, 4, 5]);
+          const mapper = mock.fn((item: number) => item * 2);
+          const filter = mock.fn((item: number) => item > 2);
 
-        const filteredAndMapped = filterIterator(set, filter).map(mapper);
+          const filteredAndMapped = filterIterator(set, filter).map(mapper);
 
-        assert.strictEqual(mapper.mock.callCount(), 0, "mapper isn't called before values are yielded");
-        assert.strictEqual(filter.mock.callCount(), 0, "filter isn't called before values are yielded");
+          const expected = [6, 8, 10];
+          const result = Array.from(filteredAndMapped);
 
-        const expected = [6, 8, 10];
-        const result = Array.from(filteredAndMapped);
+          assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+          assert.strictEqual(
+            mapper.mock.callCount(),
+            expected.length,
+            'mapper only gets called once for the values that passed filter',
+          );
+          assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+        });
+        test('mapIterator', () => {
+          const set = new Set([1, 2, 3, 4, 5]);
+          const mapper1 = mock.fn((item: number) => item * 2);
+          const mapper2 = mock.fn((item: number) => `${item}`);
 
-        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
-        assert.strictEqual(
-          mapper.mock.callCount(),
-          expected.length,
-          'mapper only gets called once for the values that passed filter',
-        );
-        assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+          //also subtly tests that TS enforces types here
+          const doubleMapped = mapIterator(set, mapper1).map(mapper2);
+
+          const expected = ['2', '4', '6', '8', '10'];
+          const result = Array.from(doubleMapped);
+
+          assert.strictEqual(doubleMapped.next().done, true, 'iterator is marked done');
+          assert.strictEqual(mapper1.mock.callCount(), set.size, 'mapper1 gets called once for every instance');
+          assert.strictEqual(mapper2.mock.callCount(), set.size, 'mapper2 gets called once for every instance');
+          assert.deepEqual(result, expected, 'Final result is all values passed through both mappers');
+        });
+        test('reduceIterator', () => {
+          const set = new Set([1, 2, 3, 4, 5]);
+          const reducer = mock.fn((carry, item) => {
+            return carry + item;
+          });
+          const mapper = mock.fn((item: number) => `${item}`);
+
+          const mappedReducer = reduceIterator(set, reducer, 0).map(mapper);
+
+          const expected = ['1', '3', '6', '10', '15'];
+          const result = Array.from(mappedReducer);
+
+          assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+          assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+          assert.deepEqual(result, expected, 'Final result is all values passed through both functions');
+        });
       });
     });
   });
