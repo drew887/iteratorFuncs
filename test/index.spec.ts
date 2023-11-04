@@ -649,7 +649,34 @@ describe('composition versions', () => {
 
 describe.todo('async iterators', () => {});
 
+// TODO: we will benefit greatly from jests .each functionality to run whole suites over sets/maps/generators/etc
+
 describe('combinations', () => {
+  describe('returned instances have helper methods to chain', () => {
+    describe('.map', () => {
+      it('should have a .map method that chains a map call', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const filter = mock.fn((item: number) => item > 2);
+
+        const filteredAndMapped = filterIterator(set, filter).map(mapper);
+
+        assert.strictEqual(mapper.mock.callCount(), 0, "mapper isn't called before values are yielded");
+        assert.strictEqual(filter.mock.callCount(), 0, "filter isn't called before values are yielded");
+
+        const expected = [6, 8, 10];
+        const result = Array.from(filteredAndMapped);
+
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.strictEqual(
+          mapper.mock.callCount(),
+          expected.length,
+          'mapper only gets called once for the values that passed filter',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+      });
+    });
+  });
   describe.todo('multiple chained calls fuse', () => {
     it.todo(
       "should when called again on an instance we've made, then just add a ref to the fun, not make a new instance",

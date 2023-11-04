@@ -49,9 +49,20 @@ export const IteratorSym = Symbol('IteratorSym');
 /**
  * Represents an iterator object we return
  */
-export interface AugmentedIterator<TValue, TReturn = any, TNext = any>
-  extends IterableIterator<TValue, TReturn, TNext> {
-  [IteratorSym]: true;
+export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
+  implements IterableIterator<TValue, TReturn, TNext>
+{
+  [IteratorSym] = true as const;
+
+  [Symbol.iterator](): this {
+    return this;
+  }
+
+  abstract next(...args: [] | [TNext]): IteratorResult<TValue, TReturn>;
+
+  map<TMapperReturn>(mapper: (item: TValue) => TMapperReturn): AugmentedIterator<TMapperReturn, TReturn, TNext> {
+    return mapIterator(this, mapper);
+  }
 }
 
 /**
@@ -206,20 +217,14 @@ export function reduceIterator<
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
   reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
   initial: TReducerReturn,
-): IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
+): AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
   const iterable = iterator[Symbol.iterator]();
 
   let state = initial;
 
-  const result: AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> = {
-    [IteratorSym]: true,
-
-    [Symbol.iterator](): IterableIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
-      return result;
-    },
-
-    next(args: TIteratorNext): IteratorResult<TReducerReturn, TIteratorReturn> {
-      const result = iterable.next(args);
+  return new (class extends AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
+    next(...args: [] | [TIteratorNext]): IteratorResult<TReducerReturn, TIteratorReturn> {
+      const result = iterable.next(...args);
 
       if (!result.done) {
         state = reducer(state, result.value);
@@ -231,11 +236,8 @@ export function reduceIterator<
       }
 
       return result;
-    },
-    //TODO: Determine if we need to implement return and throw function
-  };
-
-  return result;
+    }
+  })();
 }
 
 /**
@@ -264,19 +266,13 @@ export function mapIterator<
 >(
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
   mapper: (arg: TIteratorValue) => TMapperReturn,
-): IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
+): AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
   const iterable = iterator[Symbol.iterator]();
 
-  const result: AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> = {
-    [IteratorSym]: true,
-
-    [Symbol.iterator](): IterableIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
-      return result;
-    },
-
-    next(args: TIteratorNext): IteratorResult<TMapperReturn, TIteratorReturn> {
-      const result = iterable.next(args);
+  return new (class extends AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
+    next(...args: [] | [TIteratorNext]): IteratorResult<TMapperReturn, TIteratorReturn> {
+      const result = iterable.next(...args);
 
       if (!result.done) {
         return {
@@ -286,10 +282,8 @@ export function mapIterator<
       }
 
       return result;
-    },
-  };
-
-  return result;
+    }
+  })();
 }
 
 /**
@@ -317,26 +311,18 @@ console.log(Array.from(filtered)); // logs out [2, 4]
 export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue | undefined, TIteratorNext = any>(
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
   filter: (arg: TIteratorValue) => boolean,
-): IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
+): AugmentedIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
   const iterable = iterator[Symbol.iterator]();
 
-  const result: AugmentedIterator<TIteratorValue, TIteratorReturn, TIteratorNext> = {
-    [IteratorSym]: true,
-
-    [Symbol.iterator](): IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
-      return result;
-    },
-
-    next(args: TIteratorNext): IteratorResult<TIteratorValue, TIteratorReturn> {
-      let result = iterable.next(args);
+  return new (class extends AugmentedIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
+    next(...args: [] | [TIteratorNext]): IteratorResult<TIteratorValue, TIteratorReturn> {
+      let result = iterable.next(...args);
 
       while (!result.done && !filter(result.value)) {
-        result = iterable.next(args);
+        result = iterable.next(...args);
       }
 
       return result;
-    },
-  };
-
-  return result;
+    }
+  })();
 }
