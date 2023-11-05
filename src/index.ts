@@ -184,6 +184,13 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
   filter(filter: (item: TValue) => boolean): AugmentedIterator<TValue, TReturn, TNext> {
     return filterIterator(this, filter);
   }
+
+  reduce<TReducerReturn>(
+    reducer: (carry: TReducerReturn, item: TValue) => TReducerReturn,
+    initial: TReducerReturn,
+  ): AugmentedIterator<TReducerReturn, TReturn, TNext> {
+    return reduceIterator(this, reducer, initial);
+  }
 }
 
 /**

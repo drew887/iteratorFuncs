@@ -736,6 +736,59 @@ describe('combinations', () => {
         assert.deepEqual(result, expected, 'Final result is only the values that passed both filters');
       });
     });
+    describe('should have a .reduce method that chains a reduce call', () => {
+      test('reduceIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const reducer1 = mock.fn((carry, item) => {
+          return carry + item;
+        });
+        const reducer2 = mock.fn((carry: string, item: number): string => `${carry}-${item}`);
+
+        const doubleReduced = reduceIterator(set, reducer1, 0).reduce(reducer2, '');
+
+        const expected = ['-1', '-1-3', '-1-3-6', '-1-3-6-10', '-1-3-6-10-15'];
+        const result = Array.from(doubleReduced);
+
+        assert.strictEqual(reducer1.mock.callCount(), set.size, 'reducer1 gets called once for every instance');
+        assert.strictEqual(reducer2.mock.callCount(), set.size, 'reducer2 gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is the values passed through both reducers');
+      });
+      test('mapIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const reducer = mock.fn((carry: number, item: number) => (item > 5 ? carry : item));
+
+        //also subtly tests that TS enforces types here
+        const mappedAndReduced = mapIterator(set, mapper).reduce(reducer, 0);
+
+        // After we're > 5 always return the last one
+        const expected = [2, 4, 4, 4, 4];
+        const result = Array.from(mappedAndReduced);
+
+        assert.strictEqual(mappedAndReduced.next().done, true, 'iterator is marked done');
+        assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+        assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is mapped values that pass the reducer');
+      });
+      test('filterIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const filter1 = mock.fn((item: number) => item > 2);
+        const reducer = mock.fn((carry: string, item: number) => `${carry}-${item}`);
+
+        const filteredAndReduced = filterIterator(set, filter1).reduce(reducer, '');
+
+        const expected = ['-3', '-3-4', '-3-4-5'];
+        const result = Array.from(filteredAndReduced);
+
+        assert.strictEqual(filter1.mock.callCount(), set.size, 'filter1 gets called once for every instance');
+        assert.strictEqual(
+          reducer.mock.callCount(),
+          3,
+          'reducer only gets called once for the values that passed filter1',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the values that passed the filter then the reducer');
+      });
+    });
   });
   describe.todo('multiple chained calls fuse', () => {
     it.todo(
