@@ -151,6 +151,31 @@ class _MappingIterator<TValue, TMapperReturn, TReturn, TNext> extends AugmentedI
 }
 
 /**
+ * This is a private class for encapsulating the logic for filtering.
+ */
+class _FilteringIterator<TValue, TReturn, TNext> extends AugmentedIterator<TValue, TReturn, TNext> {
+  private iterable: Iterator<TValue, TReturn, TNext>;
+
+  constructor(
+    iterable: IteratorArg<TValue, TReturn, TNext>,
+    private filterer: (arg: TValue) => boolean,
+  ) {
+    super();
+    this.iterable = iterable[Symbol.iterator]();
+  }
+
+  next(...args: [] | [TNext]): IteratorResult<TValue, TReturn> {
+    let result = this.iterable.next(...args);
+
+    while (!result.done && !this.filterer(result.value)) {
+      result = this.iterable.next(...args);
+    }
+
+    return result;
+  }
+}
+
+/**
  * Given an Iterable or IterableIterator, a reducer, and an initial value, return a new IterableIterator that yields
  * values that are automatically piped through said reducer.
  * @param {Iterable} iterator - The iterator you wish to reduce over
@@ -210,13 +235,14 @@ export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined,
 
 /**
  * Given an IteratorArg and a filtering function it will return a new IterableIterator that when polled will eagerly pull
- * values from iterator and pass them to filter until filter returns true for an item, or we reach the end of iterator;
+ * values from iterator and pass them to filterer until filterer returns true for an item, or we reach the end of iterator;
  * it will then yield this value itself.
  *
  * **NOTE:** if iterator relies on values being passed to next, the returned IterableIterator will re-use the same next
- * value until an item is raised that passes the filter. This can lead to strange behaviours.
+ * until a value passes the filterer.
+ * value until an item is raised that passes the filterer. This can lead to strange behaviours.
  * @param {Iterable} iterator - The iterator you wish to map elements from
- * @param {Function} filter - A function to use to map the elements iterator produces
+ * @param {Function} filterer - Only values for which this function returns true are yielded.
  * @typeParam TValue - The value returned from the iterator
  * @typeParam TReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
  * @typeParam TNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
@@ -230,21 +256,9 @@ console.log(Array.from(filtered)); // logs out [2, 4]
  */
 export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
   iterator: IteratorArg<TValue, TReturn, TNext>,
-  filter: (arg: TValue) => boolean,
+  filterer: (arg: TValue) => boolean,
 ): AugmentedIterator<TValue, TReturn, TNext> {
-  const iterable = iterator[Symbol.iterator]();
-
-  return new (class extends AugmentedIterator<TValue, TReturn, TNext> {
-    next(...args: [] | [TNext]): IteratorResult<TValue, TReturn> {
-      let result = iterable.next(...args);
-
-      while (!result.done && !filter(result.value)) {
-        result = iterable.next(...args);
-      }
-
-      return result;
-    }
-  })();
+  return new _FilteringIterator(iterator, filterer);
 }
 
 //  =============      Greedy Versions       ================
