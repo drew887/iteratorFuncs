@@ -90,23 +90,23 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
 /**
  * This is a private class for encapsulating the logic for reducing.
  */
-class _ReducingIterator<TIteratorValue, TReducerReturn, TIteratorReturn, TIteratorNext> extends AugmentedIterator<
+class _ReducingIterator<TValue, TReducerReturn, TReturn, TNext> extends AugmentedIterator<
   TReducerReturn,
-  TIteratorReturn,
-  TIteratorNext
+  TReturn,
+  TNext
 > {
-  private iterable: Iterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
+  private iterable: Iterator<TValue, TReturn, TNext>;
 
   constructor(
-    iterable: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
-    private reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
+    iterable: IteratorArg<TValue, TReturn, TNext>,
+    private reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
     private state: TReducerReturn,
   ) {
     super();
     this.iterable = iterable[Symbol.iterator]();
   }
 
-  next(...args: [] | [TIteratorNext]): IteratorResult<TReducerReturn, TIteratorReturn> {
+  next(...args: [] | [TNext]): IteratorResult<TReducerReturn, TReturn> {
     const result = this.iterable.next(...args);
 
     if (!result.done) {
@@ -156,10 +156,10 @@ class _MappingIterator<TValue, TMapperReturn, TReturn, TNext> extends AugmentedI
  * @param {Iterable} iterator - The iterator you wish to reduce over
  * @param {Function} reducer - A function to use to reduce the elements iterator produces
  * @param initial The initial value to pass to reducer with the first element
- * @typeParam TIteratorValue - The value returned from the iterator
+ * @typeParam TValue - The value returned from the iterator
  * @typeParam TReducerReturn - The return type of your reducer function
- * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
- * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ * @typeParam TReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
+ * @typeParam TNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
  *
  * @example
 const set: Set<number> = new Set([1, 2, 3, 4, 5]);
@@ -176,16 +176,11 @@ const summingIterator = reduceIterator(
 const finalValues = Array.from(summingIterator);
 // finalValues will now be [1,3,6,10,15];
  */
-export function reduceIterator<
-  TIteratorValue,
-  TReducerReturn,
-  TIteratorReturn = TIteratorValue | undefined,
-  TIteratorNext = any,
->(
-  iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
-  reducer: (carry: TReducerReturn, arg: TIteratorValue) => TReducerReturn,
+export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefined, TNext = any>(
+  iterator: IteratorArg<TValue, TReturn, TNext>,
+  reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
   initial: TReducerReturn,
-): AugmentedIterator<TReducerReturn, TIteratorReturn, TIteratorNext> {
+): AugmentedIterator<TReducerReturn, TReturn, TNext> {
   return new _ReducingIterator(iterator, reducer, initial);
 }
 
@@ -194,10 +189,10 @@ export function reduceIterator<
  * but passed through the mapping function.
  * @param {Iterable} iterator - The iterator you wish to map elements from
  * @param {Function} mapper - A function to use to map the elements iterator produces
- * @typeParam TIteratorValue - The value returned from the iterator
+ * @typeParam TValue - The value returned from the iterator
  * @typeParam TMapperReturn - The return type of your reducer function
- * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
- * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ * @typeParam TReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
+ * @typeParam TNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
  * @example
 const set = new Set([1, 2, 3, 4, 5]);
 
@@ -205,15 +200,10 @@ const mapped = mapIterator(set, (item) => item * 2);
 
 console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
  */
-export function mapIterator<
-  TIteratorValue,
-  TMapperReturn,
-  TIteratorReturn = TIteratorValue | undefined,
-  TIteratorNext = any,
->(
-  iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
-  mapper: (arg: TIteratorValue) => TMapperReturn,
-): AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
+export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
+  iterator: IteratorArg<TValue, TReturn, TNext>,
+  mapper: (arg: TValue) => TMapperReturn,
+): AugmentedIterator<TMapperReturn, TReturn, TNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
   return new _MappingIterator(iterator, mapper);
 }
@@ -227,9 +217,9 @@ export function mapIterator<
  * value until an item is raised that passes the filter. This can lead to strange behaviours.
  * @param {Iterable} iterator - The iterator you wish to map elements from
  * @param {Function} filter - A function to use to map the elements iterator produces
- * @typeParam TIteratorValue - The value returned from the iterator
- * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
- * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
+ * @typeParam TValue - The value returned from the iterator
+ * @typeParam TReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
+ * @typeParam TNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
  *
  * @example
 const set = new Set([1, 2, 3, 4, 5]);
@@ -238,14 +228,14 @@ const filtered = filterIterator(set, (item) => item % 2 === 0);
 
 console.log(Array.from(filtered)); // logs out [2, 4]
  */
-export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue | undefined, TIteratorNext = any>(
-  iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
-  filter: (arg: TIteratorValue) => boolean,
-): AugmentedIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
+export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
+  iterator: IteratorArg<TValue, TReturn, TNext>,
+  filter: (arg: TValue) => boolean,
+): AugmentedIterator<TValue, TReturn, TNext> {
   const iterable = iterator[Symbol.iterator]();
 
-  return new (class extends AugmentedIterator<TIteratorValue, TIteratorReturn, TIteratorNext> {
-    next(...args: [] | [TIteratorNext]): IteratorResult<TIteratorValue, TIteratorReturn> {
+  return new (class extends AugmentedIterator<TValue, TReturn, TNext> {
+    next(...args: [] | [TNext]): IteratorResult<TValue, TReturn> {
       let result = iterable.next(...args);
 
       while (!result.done && !filter(result.value)) {
