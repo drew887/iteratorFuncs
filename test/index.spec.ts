@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { beforeEach, describe, it, mock } from 'node:test';
+import { beforeEach, describe, it, mock, test } from 'node:test';
 import assert from 'node:assert';
 import {
   eagerlyReduceIterator,
   filterIterator,
   filterIteratorToArray,
-  IteratorSym,
   mapIterator,
   mapIteratorToArray,
   reduceIterator,
@@ -370,12 +369,6 @@ describe('composition versions', () => {
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
       });
 
-      it('should have the symbol set', () => {
-        const actual = reduceIterator(iter, () => {}, undefined);
-
-        assert.strictEqual((actual as any)[IteratorSym], true, 'returned object has our symbol set');
-      });
-
       it('should yield all reduced values', () => {
         const reducer = mock.fn((carry, item) => {
           return carry + item;
@@ -462,12 +455,6 @@ describe('composition versions', () => {
         const actual = mapIterator(iter, () => {});
 
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
-      });
-
-      it('should have the symbol set', () => {
-        const actual = mapIterator(iter, () => {});
-
-        assert.strictEqual((actual as any)[IteratorSym], true, 'returned object has our symbol set');
       });
 
       it('should yield all mapped values', () => {
@@ -558,14 +545,6 @@ describe('composition versions', () => {
         assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
       });
 
-      it('should have the symbol set', () => {
-        const actual = filterIterator(iter, () => {
-          return true;
-        });
-
-        assert.strictEqual((actual as any)[IteratorSym], true, 'returned object has our symbol set');
-      });
-
       it('should yield only values that pass the filter', () => {
         const filter = mock.fn((item: number) => {
           return item % 2 == 0;
@@ -649,7 +628,168 @@ describe('composition versions', () => {
 
 describe.todo('async iterators', () => {});
 
+// TODO: we will benefit greatly from jests .each functionality to run whole suites over sets/maps/generators/etc
+
 describe('combinations', () => {
+  describe('returned instances have helper methods to chain', () => {
+    describe('should have a .map method that chains a map call', () => {
+      test('filterIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const filter = mock.fn((item: number) => item > 2);
+
+        const filteredAndMapped = filterIterator(set, filter).map(mapper);
+
+        const expected = [6, 8, 10];
+        const result = Array.from(filteredAndMapped);
+
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.strictEqual(
+          mapper.mock.callCount(),
+          expected.length,
+          'mapper only gets called once for the values that passed filter',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
+      });
+      test('mapIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper1 = mock.fn((item: number) => item * 2);
+        const mapper2 = mock.fn((item: number) => `${item}`);
+
+        //also subtly tests that TS enforces types here
+        const doubleMapped = mapIterator(set, mapper1).map(mapper2);
+
+        const expected = ['2', '4', '6', '8', '10'];
+        const result = Array.from(doubleMapped);
+
+        assert.strictEqual(doubleMapped.next().done, true, 'iterator is marked done');
+        assert.strictEqual(mapper1.mock.callCount(), set.size, 'mapper1 gets called once for every instance');
+        assert.strictEqual(mapper2.mock.callCount(), set.size, 'mapper2 gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is all values passed through both mappers');
+      });
+      test('reduceIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const reducer = mock.fn((carry, item) => {
+          return carry + item;
+        });
+        const mapper = mock.fn((item: number) => `${item}`);
+
+        const mappedReducer = reduceIterator(set, reducer, 0).map(mapper);
+
+        const expected = ['1', '3', '6', '10', '15'];
+        const result = Array.from(mappedReducer);
+
+        assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+        assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is all values passed through both functions');
+      });
+    });
+    describe('should have a .filter method that chains a filter call', () => {
+      test('reduceIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const reducer = mock.fn((carry, item) => {
+          return carry + item;
+        });
+        const filter = mock.fn((item: number) => item > 5);
+
+        const filteredReducer = reduceIterator(set, reducer, 0).filter(filter);
+
+        const expected = [6, 10, 15];
+        const result = Array.from(filteredReducer);
+
+        assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is the reduced values that pass the filter');
+      });
+      test('mapIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const filter = mock.fn((item: number) => item > 5);
+
+        //also subtly tests that TS enforces types here
+        const doubleMapped = mapIterator(set, mapper).filter(filter);
+
+        const expected = [6, 8, 10];
+        const result = Array.from(doubleMapped);
+
+        assert.strictEqual(doubleMapped.next().done, true, 'iterator is marked done');
+        assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+        assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is mapped values that pass the filter');
+      });
+      test('filterIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const filter2 = mock.fn((item: number) => item % 2 === 0);
+        const filter1 = mock.fn((item: number) => item > 2);
+
+        const doubleFiltered = filterIterator(set, filter1).filter(filter2);
+
+        const expected = [4];
+        const result = Array.from(doubleFiltered);
+
+        assert.strictEqual(filter1.mock.callCount(), set.size, 'filter1 gets called once for every instance');
+        assert.strictEqual(
+          filter2.mock.callCount(),
+          3,
+          'filter2 only gets called once for the values that passed filter1',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the values that passed both filters');
+      });
+    });
+    describe('should have a .reduce method that chains a reduce call', () => {
+      test('reduceIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const reducer1 = mock.fn((carry, item) => {
+          return carry + item;
+        });
+        const reducer2 = mock.fn((carry: string, item: number): string => `${carry}-${item}`);
+
+        const doubleReduced = reduceIterator(set, reducer1, 0).reduce(reducer2, '');
+
+        const expected = ['-1', '-1-3', '-1-3-6', '-1-3-6-10', '-1-3-6-10-15'];
+        const result = Array.from(doubleReduced);
+
+        assert.strictEqual(reducer1.mock.callCount(), set.size, 'reducer1 gets called once for every instance');
+        assert.strictEqual(reducer2.mock.callCount(), set.size, 'reducer2 gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is the values passed through both reducers');
+      });
+      test('mapIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const mapper = mock.fn((item: number) => item * 2);
+        const reducer = mock.fn((carry: number, item: number) => (item > 5 ? carry : item));
+
+        //also subtly tests that TS enforces types here
+        const mappedAndReduced = mapIterator(set, mapper).reduce(reducer, 0);
+
+        // After we're > 5 always return the last one
+        const expected = [2, 4, 4, 4, 4];
+        const result = Array.from(mappedAndReduced);
+
+        assert.strictEqual(mappedAndReduced.next().done, true, 'iterator is marked done');
+        assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
+        assert.strictEqual(reducer.mock.callCount(), set.size, 'reducer gets called once for every instance');
+        assert.deepEqual(result, expected, 'Final result is mapped values that pass the reducer');
+      });
+      test('filterIterator', () => {
+        const set = new Set([1, 2, 3, 4, 5]);
+        const filter1 = mock.fn((item: number) => item > 2);
+        const reducer = mock.fn((carry: string, item: number) => `${carry}-${item}`);
+
+        const filteredAndReduced = filterIterator(set, filter1).reduce(reducer, '');
+
+        const expected = ['-3', '-3-4', '-3-4-5'];
+        const result = Array.from(filteredAndReduced);
+
+        assert.strictEqual(filter1.mock.callCount(), set.size, 'filter1 gets called once for every instance');
+        assert.strictEqual(
+          reducer.mock.callCount(),
+          3,
+          'reducer only gets called once for the values that passed filter1',
+        );
+        assert.deepEqual(result, expected, 'Final result is only the values that passed the filter then the reducer');
+      });
+    });
+  });
   describe.todo('multiple chained calls fuse', () => {
     it.todo(
       "should when called again on an instance we've made, then just add a ref to the fun, not make a new instance",
