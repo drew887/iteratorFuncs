@@ -1,24 +1,62 @@
 # IteratorFuncs
 
-tldr:
+## A tiny package to simplify working with iterators
+
+tldr: Provides a small set of tools for adding map/filter/reduce functionality to iterators without having to yield
+their values.
 
 ```typescript
 const set = new Set([1, 2, 3, 4, 5]);
-const mapped = mapIterator(set, (item) => item * 2);
 
-console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
+const mappedAndFiltered = mapIterator(set, (item) => item * 2).filter((item) => item > 5);
+
+console.log(Array.from(mappedAndFiltered)); // logs out [6, 8, 10]
 ```
+
+These functions take an `IterableIterator` or an `Iterator`, a function of the appropriate type and will return
+an `AugmentedIterator`:
+
+- [mapIterator](https://drew887.github.io/iteratorFuncs/functions/mapIterator.html)
+- [filterIterator](https://drew887.github.io/iteratorFuncs/functions/filterIterator.html)
+- [reduceIterator](https://drew887.github.io/iteratorFuncs/functions/reduceIterator.html)
+
+The `AugmentedIterator` class also provides `.map`, `.filter` and `.reduce` helper functions that are chainable.
+
+#### Greedy Versions
+
+We also provide small utility functions for if you want to just immediately yield all values from the iterator at the
+same time but don't want to bother doing an `Array.from` first:
+
+```typescript
+const set = new Set([1, 2, 3, 4, 5]);
+
+const mappedValues = mapIteratorToArray(set, (item: number): number => {
+  return item * 2;
+});
+
+console.log(mappedValues); // logs out [2, 4, 6, 8, 10]
+```
+
+For these "greedy" utilities there are:
+
+- [mapIteratorToArray](https://drew887.github.io/iteratorFuncs/functions/mapIteratorToArray.html)
+- [filterIteratorToArray](https://drew887.github.io/iteratorFuncs/functions/filterIteratorToArray.html)
+- \*[eagerlyReduceIterator](https://drew887.github.io/iteratorFuncs/functions/eagerlyReduceIterator.html)
+  This one is named differently since you aren't limited to reducing to an array. But you can think of it as the
+  equivalent to the above.
 
 ## Docs
 
-Docs are auto generated and live at [https://drew887.github.io/iteratorFuncs](https://drew887.github.io/iteratorFuncs/modules.html)
+Docs are auto generated and live
+at [https://drew887.github.io/iteratorFuncs](https://drew887.github.io/iteratorFuncs/modules.html)
 
-## A tiny package to simplify working with iterators
+## Why?
 
 It has become very common for me in places that I work in to need to be able to do the classic map/reduce/filter/etc
-with iterators (but don't want to have to convert them into arrays first since that is bad for perf); while also not
-being allowed to bring in a package to do so, say lodash or equivalent, due to company/security policy of not allowing
-new outside packages without having to go through a formal review process.
+with iterators (but don't want to have to convert them into arrays first since that is bad for perf, or I need to pass
+the iterator to another package); while also not being allowed to bring in a package to do so, say lodash or equivalent,
+due to company/security policy of not allowing new outside packages without having to go through a formal review
+process.
 
 So here is an MPL-2.0 licensed single file package that gives the ability to do just that.
 

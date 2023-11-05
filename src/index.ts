@@ -16,9 +16,12 @@
  * tldr:
 ```typescript
 const set = new Set([1, 2, 3, 4, 5]);
-const mapped = mapIterator(set, (item) => item * 2);
 
-console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
+const mappedAndFiltered =
+  mapIterator(set, (item) => item * 2)
+  .filter((item) => item > 5);
+
+console.log(Array.from(mappedAndFiltered)); // logs out [6, 8, 10]
 ```
  *
  * @packageDocumentation
@@ -52,121 +55,12 @@ export type IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext> =
   | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
   | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
 
-/**
- * Given an iterator, eagerly reduce over its results until it finishes and return the result
- * @param {Iterable} iterator - The iterator you wish to reduce over
- * @param {Function} reducer - A function to use to reduce the elements iterator produces
- * @param initial The initial value to pass to reducer with the first element. Also returned if iterator never yields a value
- * @typeParam TValue - The type of values that iterator will yield and that initial must be
- * @typeParam TReturn - The type of values that reducer will return
- *
- * @example
-  ```typescript
-const set: Set<number> = new Set([1, 2, 3, 4, 5]);
-
-const sum = eagerlyReduceIterator(
-  set.values(),
-  (carry: number, item: number): number => {
-    return carry + item;
-  },
-  0,
-);
-// sum is now 15
- * ```
- */
-export function eagerlyReduceIterator<TValue, TReturn>(
-  iterator: Iterable<TValue>,
-  reducer: (carry: TReturn, arg: TValue) => TReturn,
-  initial: TReturn,
-): TReturn {
-  let result: TReturn = initial;
-
-  for (const a of iterator) {
-    result = reducer(result, a);
-  }
-
-  return result;
-}
-
-/**
- * Eagerly Map over an iterator and return an array of results
- * @param {Iterable} iterator - The iterator you wish to map over
- * @param {Function} mapper - The function you want to use to process any elements yielded from iterator
- * @typeParam TValue - The type of values that iterator will yield
- * @typeParam TReturn - The type of values that mapper will return
- *
- * @example
-```typescript
-const set: Set<number> = new Set([1, 2, 3, 4, 5]);
-
-const squaredValues = mapIteratorToArray(
-  set.values(),
-  (item: number): number => {
-    return item * item;
-  },
-);
-// squaredValues = [1, 4, 9, 16, 25];
-```
- */
-export function mapIteratorToArray<TValue, TReturn>(
-  iterator: Iterable<TValue>,
-  mapper: (arg: TValue) => TReturn,
-): Array<TReturn> {
-  return eagerlyReduceIterator(
-    iterator,
-    (carry, item): TReturn[] => {
-      carry.push(mapper(item));
-
-      return carry;
-    },
-    [] as TReturn[],
-  );
-}
-
-/**
- * Eagerly Filter over an iterator and return an array of results
- * @param {Iterable} iterator - The iterator you wish to filter over
- * @param {Function} filter - Your filtering function
- * @typeParam TValue - The type of values that iterator will yield
- *
- * @example
-```typescript
-const set: Set<number> = new Set([1, 2, 3, 4, 5]);
-
-const evenValues = filterIteratorToArray(
-  set.values(),
-  (item: number): boolean => {
-    return item % 2 === 0;
-  },
-);
-// evenValues = [2, 4];
-```
- */
-export function filterIteratorToArray<TValue>(
-  iterator: Iterable<TValue>,
-  filter: (arg: TValue) => boolean,
-): Array<TValue> {
-  return eagerlyReduceIterator(
-    iterator,
-    (carry, item) => {
-      if (filter(item)) {
-        carry.push(item);
-      }
-
-      return carry;
-    },
-    [] as Array<TValue>,
-  );
-}
-
-//  =============      Non Eager Versions       ================
+//  =============      Non Greedy Versions       ================
 
 /**
  * An AugmentedIterator represents one of the IterableIterators we return.
- * Simply implement a next method that wraps up the logic for dealing with the values (ie calling the mapper function)
- * and we take care of the rest.
- *
- * Should be only implemented internally
+ * This abstract class is exported only to provide type/intellisense information,
+ * and should be only implemented internally.
  */
 export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
   implements IterableIterator<TValue, TReturn, TNext>
@@ -233,14 +127,13 @@ class _ReducingIterator<TIteratorValue, TReducerReturn, TIteratorReturn, TIterat
  * values that are automatically piped through said reducer.
  * @param {Iterable} iterator - The iterator you wish to reduce over
  * @param {Function} reducer - A function to use to reduce the elements iterator produces
- * @param {TReducerReturn} initial The initial value to pass to reducer with the first element
+ * @param initial The initial value to pass to reducer with the first element
  * @typeParam TIteratorValue - The value returned from the iterator
  * @typeParam TReducerReturn - The return type of your reducer function
  * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
  * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
  *
  * @example
-```typescript
 const set: Set<number> = new Set([1, 2, 3, 4, 5]);
 
 const summingIterator = reduceIterator(
@@ -254,7 +147,6 @@ const summingIterator = reduceIterator(
 
 const finalValues = Array.from(summingIterator);
 // finalValues will now be [1,3,6,10,15];
-```
  */
 export function reduceIterator<
   TIteratorValue,
@@ -279,13 +171,11 @@ export function reduceIterator<
  * @typeParam TIteratorReturn - If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined
  * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
  * @example
-```typescript
 const set = new Set([1, 2, 3, 4, 5]);
 
 const mapped = mapIterator(set, (item) => item * 2);
 
 console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
-```
  */
 export function mapIterator<
   TIteratorValue,
@@ -317,8 +207,8 @@ export function mapIterator<
 
 /**
  * Given an IteratorArg and a filtering function it will return a new IterableIterator that when polled will eagerly pull
- * values from iterator and pass them to filter until filter returns true for an item or we reach the end of iterator; it
- * will then yield this value itself.
+ * values from iterator and pass them to filter until filter returns true for an item, or we reach the end of iterator;
+ * it will then yield this value itself.
  *
  * **NOTE:** if iterator relies on values being passed to next, the returned IterableIterator will re-use the same next
  * value until an item is raised that passes the filter. This can lead to strange behaviours.
@@ -329,13 +219,11 @@ export function mapIterator<
  * @typeParam TIteratorNext - The type your iterator is expecting as what's passed to its next function. For generators this is the type returned after a yield.
  *
  * @example
-```typescript
 const set = new Set([1, 2, 3, 4, 5]);
 
 const filtered = filterIterator(set, (item) => item % 2 === 0);
 
 console.log(Array.from(filtered)); // logs out [2, 4]
-```
  */
 export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue | undefined, TIteratorNext = any>(
   iterator: IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext>,
@@ -354,4 +242,106 @@ export function filterIterator<TIteratorValue, TIteratorReturn = TIteratorValue 
       return result;
     }
   })();
+}
+
+//  =============      Greedy Versions       ================
+
+/**
+ * Given an iterator, eagerly reduce over its results until it finishes and return the result
+ * @param {Iterable} iterator - The iterator you wish to reduce over
+ * @param {Function} reducer - A function to use to reduce the elements iterator produces
+ * @param initial The initial value to pass to reducer with the first element. Also returned if iterator never yields a value
+ * @typeParam TValue - The type of values that iterator will yield and that initial must be
+ * @typeParam TReturn - The type of values that reducer will return
+ *
+ * @example
+ const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+
+ const sum = eagerlyReduceIterator(
+   set.values(),
+   (carry: number, item: number): number => {
+     return carry + item;
+   },
+   0,
+ );
+ // sum is now 15
+ */
+export function eagerlyReduceIterator<TValue, TReturn>(
+  iterator: Iterable<TValue>,
+  reducer: (carry: TReturn, arg: TValue) => TReturn,
+  initial: TReturn,
+): TReturn {
+  let result: TReturn = initial;
+
+  for (const a of iterator) {
+    result = reducer(result, a);
+  }
+
+  return result;
+}
+
+/**
+ * Eagerly Map over an iterator and return an array of results
+ * @param {Iterable} iterator - The iterator you wish to map over
+ * @param {Function} mapper - The function you want to use to process any elements yielded from iterator
+ * @typeParam TValue - The type of values that iterator will yield
+ * @typeParam TReturn - The type of values that mapper will return
+ *
+ * @example
+ const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+
+ const squaredValues = mapIteratorToArray(
+   set.values(),
+   (item: number): number => {
+     return item * item;
+   },
+ );
+ */
+export function mapIteratorToArray<TValue, TReturn>(
+  iterator: Iterable<TValue>,
+  mapper: (arg: TValue) => TReturn,
+): Array<TReturn> {
+  return eagerlyReduceIterator(
+    iterator,
+    (carry, item): TReturn[] => {
+      carry.push(mapper(item));
+
+      return carry;
+    },
+    [] as TReturn[],
+  );
+}
+
+/**
+ * Eagerly Filter over an iterator and return an array of results
+ * @param {Iterable} iterator - The iterator you wish to filter over
+ * @param {Function} filter - Your filtering function
+ * @typeParam TValue - The type of values that iterator will yield
+ *
+ * @example
+ const set: Set<number> = new Set([1, 2, 3, 4, 5]);
+
+ const evenValues = filterIteratorToArray(
+   set.values(),
+   (item: number): boolean => {
+     return item % 2 === 0;
+   },
+ );
+ // evenValues = [2, 4];
+ */
+export function filterIteratorToArray<TValue>(
+  iterator: Iterable<TValue>,
+  filter: (arg: TValue) => boolean,
+): Array<TValue> {
+  return eagerlyReduceIterator(
+    iterator,
+    (carry, item) => {
+      if (filter(item)) {
+        carry.push(item);
+      }
+
+      return carry;
+    },
+    [] as Array<TValue>,
+  );
 }
