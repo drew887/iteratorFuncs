@@ -71,14 +71,33 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
 
   abstract next(...args: [] | [TNext]): IteratorResult<TValue, TReturn>;
 
+  /**
+   * Returns a new AugmentedIterator that will run mapper over each item before yielding
+   *
+   * Because we return another AugmentedIterator instance, this call is chainable.
+   * @param {Function} mapper the mapping function you want to be run over all values
+   * @typeParam TMapperReturn the return type from mapper, will also become the new TValue type of the returned AugmentedIterator
+   */
   map<TMapperReturn>(mapper: (item: TValue) => TMapperReturn): AugmentedIterator<TMapperReturn, TReturn, TNext> {
     return mapIterator(this, mapper);
   }
 
+  /**
+   * Returns a new AugmentedIterator that will only yield values for which filter returns true
+   * @param {Function} filter The filtering function you wish to use
+   */
   filter(filter: (item: TValue) => boolean): AugmentedIterator<TValue, TReturn, TNext> {
     return filterIterator(this, filter);
   }
 
+  /**
+   * Returns a new AugmentedIterator that has access to the last value yielded OR initial the same way a reduce would
+   * normally work over say an array.
+   * @param reducer the function you want to use as a reducer. Takes arguments in (carry,item) order. The first time we
+   *   yield a value carry will be initial, after which it will be the previously returned value from reducer.
+   * @param initial the value we should pass to reducer the first time we yield a value.
+   * @typeParam TReducerReturn the return type of reducer, and of initial; will also become the TValue type of the returned AugmentedIterator
+   */
   reduce<TReducerReturn>(
     reducer: (carry: TReducerReturn, item: TValue) => TReducerReturn,
     initial: TReducerReturn,
