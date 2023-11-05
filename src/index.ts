@@ -123,6 +123,34 @@ class _ReducingIterator<TIteratorValue, TReducerReturn, TIteratorReturn, TIterat
 }
 
 /**
+ * This is a private class for encapsulating the logic for mapping.
+ */
+class _MappingIterator<TValue, TMapperReturn, TReturn, TNext> extends AugmentedIterator<TMapperReturn, TReturn, TNext> {
+  private iterable: Iterator<TValue, TReturn, TNext>;
+
+  constructor(
+    iterable: IteratorArg<TValue, TReturn, TNext>,
+    private mapper: (arg: TValue) => TMapperReturn,
+  ) {
+    super();
+    this.iterable = iterable[Symbol.iterator]();
+  }
+
+  next(...args: [] | [TNext]): IteratorResult<TMapperReturn, TReturn> {
+    const result = this.iterable.next(...args);
+
+    if (!result.done) {
+      return {
+        ...result,
+        value: this.mapper(result.value),
+      };
+    }
+
+    return result;
+  }
+}
+
+/**
  * Given an Iterable or IterableIterator, a reducer, and an initial value, return a new IterableIterator that yields
  * values that are automatically piped through said reducer.
  * @param {Iterable} iterator - The iterator you wish to reduce over
@@ -187,22 +215,7 @@ export function mapIterator<
   mapper: (arg: TIteratorValue) => TMapperReturn,
 ): AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
-  const iterable = iterator[Symbol.iterator]();
-
-  return new (class extends AugmentedIterator<TMapperReturn, TIteratorReturn, TIteratorNext> {
-    next(...args: [] | [TIteratorNext]): IteratorResult<TMapperReturn, TIteratorReturn> {
-      const result = iterable.next(...args);
-
-      if (!result.done) {
-        return {
-          ...result,
-          value: mapper(result.value),
-        };
-      }
-
-      return result;
-    }
-  })();
+  return new _MappingIterator(iterator, mapper);
 }
 
 /**
