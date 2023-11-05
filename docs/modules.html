@@ -23,13 +23,17 @@ an answer when searching for this, it can be a little disappointing or jarring f
 approach that js normally lets you take.</p>
 <p>So this package is simply to help facilitate these patterns for IterableIterators.</p>
 <p>tldr:</p>
-<pre><code class="language-typescript"><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">set</span><span class="hl-1"> = </span><span class="hl-0">new</span><span class="hl-1"> </span><span class="hl-3">Set</span><span class="hl-1">([</span><span class="hl-4">1</span><span class="hl-1">, </span><span class="hl-4">2</span><span class="hl-1">, </span><span class="hl-4">3</span><span class="hl-1">, </span><span class="hl-4">4</span><span class="hl-1">, </span><span class="hl-4">5</span><span class="hl-1">]);</span><br/><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">mapped</span><span class="hl-1"> = </span><span class="hl-3">mapIterator</span><span class="hl-1">(</span><span class="hl-5">set</span><span class="hl-1">, (</span><span class="hl-5">item</span><span class="hl-1">) </span><span class="hl-0">=&gt;</span><span class="hl-1"> </span><span class="hl-5">item</span><span class="hl-1"> * </span><span class="hl-4">2</span><span class="hl-1">);</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-3">log</span><span class="hl-1">(</span><span class="hl-5">Array</span><span class="hl-1">.</span><span class="hl-3">from</span><span class="hl-1">(</span><span class="hl-5">mapped</span><span class="hl-1">)); </span><span class="hl-6">// logs out [2, 4, 6, 8, 10]</span>
+<pre><code class="language-typescript"><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">set</span><span class="hl-1"> = </span><span class="hl-0">new</span><span class="hl-1"> </span><span class="hl-3">Set</span><span class="hl-1">([</span><span class="hl-4">1</span><span class="hl-1">, </span><span class="hl-4">2</span><span class="hl-1">, </span><span class="hl-4">3</span><span class="hl-1">, </span><span class="hl-4">4</span><span class="hl-1">, </span><span class="hl-4">5</span><span class="hl-1">]);</span><br/><br/><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">mappedAndFiltered</span><span class="hl-1"> =</span><br/><span class="hl-1"> </span><span class="hl-3">mapIterator</span><span class="hl-1">(</span><span class="hl-5">set</span><span class="hl-1">, (</span><span class="hl-5">item</span><span class="hl-1">) </span><span class="hl-0">=&gt;</span><span class="hl-1"> </span><span class="hl-5">item</span><span class="hl-1"> * </span><span class="hl-4">2</span><span class="hl-1">)</span><br/><span class="hl-1"> .</span><span class="hl-3">filter</span><span class="hl-1">((</span><span class="hl-5">item</span><span class="hl-1">) </span><span class="hl-0">=&gt;</span><span class="hl-1"> </span><span class="hl-5">item</span><span class="hl-1"> &gt; </span><span class="hl-4">5</span><span class="hl-1">);</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-3">log</span><span class="hl-1">(</span><span class="hl-5">Array</span><span class="hl-1">.</span><span class="hl-3">from</span><span class="hl-1">(</span><span class="hl-5">mappedAndFiltered</span><span class="hl-1">)); </span><span class="hl-6">// logs out [6, 8, 10]</span>
 </code><button>Copy</button></pre>
 </div>
 <div class="tsd-comment tsd-typography"></div></section>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <h3 class="tsd-index-heading uppercase">Index</h3>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading">Classes</h3>
+<div class="tsd-index-list"><a href="classes/AugmentedIterator.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg><span>Augmented<wbr/>Iterator</span></a>
+</div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Interfaces</h3>
 <div class="tsd-index-list"><a href="interfaces/Iterable.html" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Iterable</span></a>
@@ -66,6 +70,7 @@ approach that js normally lets you take.</p>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="modules.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1"></use></svg><span>@drew887121/iteratorfuncs</span></a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base=".">
+<li><a href="classes/AugmentedIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg>AugmentedIterator</a></li>
 <li><a href="interfaces/Iterable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg>Iterable</a></li>
 <li><a href="interfaces/IterableIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg>IterableIterator</a></li>
 <li><a href="types/IteratorArg.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg>IteratorArg</a></li>

@@ -17,29 +17,30 @@
 <h1>Function filterIterator</h1></div>
 <section class="tsd-panel">
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="filterIterator"><span class="tsd-kind-call-signature">filter<wbr/>Iterator</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorNext</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">iterator</span>, <span class="tsd-kind-parameter">filter</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/IterableIterator.html" class="tsd-signature-type tsd-kind-interface">IterableIterator</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorNext</span><span class="tsd-signature-symbol">&gt;</span><a href="#filterIterator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="filterIterator"><span class="tsd-kind-call-signature">filter<wbr/>Iterator</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TNext</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">iterator</span>, <span class="tsd-kind-parameter">filterer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/AugmentedIterator.html" class="tsd-signature-type tsd-kind-class">AugmentedIterator</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TNext</span><span class="tsd-signature-symbol">&gt;</span><a href="#filterIterator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Given an IteratorArg and a filtering function it will return a new IterableIterator that when polled will eagerly pull
-values from iterator and pass them to filter until filter returns true for an item or we reach the end of iterator; it
-will then yield this value itself.</p>
+values from iterator and pass them to filterer until filterer returns true for an item, or we reach the end of iterator;
+it will then yield this value itself.</p>
 <p><strong>NOTE:</strong> if iterator relies on values being passed to next, the returned IterableIterator will re-use the same next
-value until an item is raised that passes the filter. This can lead to strange behaviours.</p>
+until a value passes the filterer.
+value until an item is raised that passes the filterer. This can lead to strange behaviours.</p>
 </div>
 <section class="tsd-panel">
 <h4>Type Parameters</h4>
 <ul class="tsd-type-parameter-list">
 <li>
-<h4><span class="tsd-kind-type-parameter">TIteratorValue</span></h4>
+<h4><span class="tsd-kind-type-parameter">TValue</span></h4>
 <div class="tsd-comment tsd-typography"><p>The value returned from the iterator</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
-<h4><span class="tsd-kind-type-parameter">TIteratorReturn</span> = <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorValue</span></h4>
+<h4><span class="tsd-kind-type-parameter">TReturn</span> = <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type tsd-kind-type-parameter">TValue</span></h4>
 <div class="tsd-comment tsd-typography"><p>If your iterator has a return type it must be the same as TIteratorValue, otherwise undefined</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
-<h4><span class="tsd-kind-type-parameter">TIteratorNext</span> = <span class="tsd-signature-type">any</span></h4>
+<h4><span class="tsd-kind-type-parameter">TNext</span> = <span class="tsd-signature-type">any</span></h4>
 <div class="tsd-comment tsd-typography"><p>The type your iterator is expecting as what&#39;s passed to its next function. For generators this is the type returned after a yield.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li></ul></section>
@@ -47,13 +48,13 @@ value until an item is raised that passes the filter. This can lead to strange b
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">iterator</span>: <a href="../types/IteratorArg.html" class="tsd-signature-type tsd-kind-type-alias">IteratorArg</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorNext</span><span class="tsd-signature-symbol">&gt;</span></h5>
+<h5><span class="tsd-kind-parameter">iterator</span>: <a href="../types/IteratorArg.html" class="tsd-signature-type tsd-kind-type-alias">IteratorArg</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TNext</span><span class="tsd-signature-symbol">&gt;</span></h5>
 <div class="tsd-comment tsd-typography"><p>The iterator you wish to map elements from</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></li>
 <li>
-<h5><span class="tsd-kind-parameter">filter</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">arg</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></h5>
-<div class="tsd-comment tsd-typography"><p>A function to use to map the elements iterator produces</p>
+<h5><span class="tsd-kind-parameter">filterer</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">arg</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span></h5>
+<div class="tsd-comment tsd-typography"><p>Only values for which this function returns true are yielded.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div>
 <ul class="tsd-parameters">
@@ -65,15 +66,15 @@ value until an item is raised that passes the filter. This can lead to strange b
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">arg</span>: <span class="tsd-signature-type tsd-kind-type-parameter">TIteratorValue</span></h5></li></ul></div>
+<h5><span class="tsd-kind-parameter">arg</span>: <span class="tsd-signature-type tsd-kind-type-parameter">TValue</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4></li></ul></li></ul></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="../interfaces/IterableIterator.html" class="tsd-signature-type tsd-kind-interface">IterableIterator</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TIteratorNext</span><span class="tsd-signature-symbol">&gt;</span></h4>
+<h4 class="tsd-returns-title">Returns <a href="../classes/AugmentedIterator.html" class="tsd-signature-type tsd-kind-class">AugmentedIterator</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TValue</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TReturn</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TNext</span><span class="tsd-signature-symbol">&gt;</span></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Example</h4><pre><code class="language-typescript"><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">set</span><span class="hl-1"> = </span><span class="hl-0">new</span><span class="hl-1"> </span><span class="hl-3">Set</span><span class="hl-1">([</span><span class="hl-4">1</span><span class="hl-1">, </span><span class="hl-4">2</span><span class="hl-1">, </span><span class="hl-4">3</span><span class="hl-1">, </span><span class="hl-4">4</span><span class="hl-1">, </span><span class="hl-4">5</span><span class="hl-1">]);</span><br/><br/><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">filtered</span><span class="hl-1"> = </span><span class="hl-3">filterIterator</span><span class="hl-1">(</span><span class="hl-5">set</span><span class="hl-1">, (</span><span class="hl-5">item</span><span class="hl-1">) </span><span class="hl-0">=&gt;</span><span class="hl-1"> </span><span class="hl-5">item</span><span class="hl-1"> % </span><span class="hl-4">2</span><span class="hl-1"> === </span><span class="hl-4">0</span><span class="hl-1">);</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-3">log</span><span class="hl-1">(</span><span class="hl-5">Array</span><span class="hl-1">.</span><span class="hl-3">from</span><span class="hl-1">(</span><span class="hl-5">filtered</span><span class="hl-1">)); </span><span class="hl-6">// logs out [2, 4]</span>
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">set</span><span class="hl-1"> = </span><span class="hl-0">new</span><span class="hl-1"> </span><span class="hl-3">Set</span><span class="hl-1">([</span><span class="hl-4">1</span><span class="hl-1">, </span><span class="hl-4">2</span><span class="hl-1">, </span><span class="hl-4">3</span><span class="hl-1">, </span><span class="hl-4">4</span><span class="hl-1">, </span><span class="hl-4">5</span><span class="hl-1">]);</span><br/><br/><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">filtered</span><span class="hl-1"> = </span><span class="hl-3">filterIterator</span><span class="hl-1">(</span><span class="hl-5">set</span><span class="hl-1">, (</span><span class="hl-5">item</span><span class="hl-1">) </span><span class="hl-0">=&gt;</span><span class="hl-1"> </span><span class="hl-5">item</span><span class="hl-1"> % </span><span class="hl-4">2</span><span class="hl-1"> === </span><span class="hl-4">0</span><span class="hl-1">);</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-3">log</span><span class="hl-1">(</span><span class="hl-5">Array</span><span class="hl-1">.</span><span class="hl-3">from</span><span class="hl-1">(</span><span class="hl-5">filtered</span><span class="hl-1">)); </span><span class="hl-6">// logs out [2, 4]</span>
 </code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/drew887/iteratorFuncs/blob/399896f/src/index.ts#L303">src/index.ts:303</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/drew887/iteratorFuncs/blob/5f74cf0/src/index.ts#L257">src/index.ts:257</a></li></ul></aside></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -92,6 +93,7 @@ value until an item is raised that passes the filter. This can lead to strange b
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1"></use></svg><span>@drew887121/iteratorfuncs</span></a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container" data-base="..">
+<li><a href="../classes/AugmentedIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-128"></use></svg>AugmentedIterator</a></li>
 <li><a href="../interfaces/Iterable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg>Iterable</a></li>
 <li><a href="../interfaces/IterableIterator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg>IterableIterator</a></li>
 <li><a href="../types/IteratorArg.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg>IteratorArg</a></li>
