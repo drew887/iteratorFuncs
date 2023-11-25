@@ -31,6 +31,8 @@ console.log(Array.from(mappedAndFiltered)); // logs out [6, 8, 10]
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * Copyleft @drew887 <drew887121@gmail.com> <Andrew Mcdonald> 2023
  */
 
 /**
