@@ -626,7 +626,33 @@ describe('composition versions', () => {
   });
 });
 
-describe.todo('async iterators', () => {});
+describe.todo('async iterators', () => {
+  describe('reduceAsyncIterator', () => {
+    describe('over Generators', () => {
+      const generator = function* () {
+        for (let i = 1; i <= 5; i++) {
+          yield i;
+        }
+
+        return;
+      };
+
+      let iter: Generator<number, void>;
+
+      beforeEach(() => {
+        iter = generator();
+      });
+
+      it('should return another iterator', () => {
+        const actual = reduceIterator(iter, () => {}, undefined);
+
+        assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
+      });
+
+      it('should yield reduced values asynchronously', () => {});
+    });
+  });
+});
 
 // TODO: we will benefit greatly from jests .each functionality to run whole suites over sets/maps/generators/etc
 
