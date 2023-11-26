@@ -64,14 +64,6 @@ export interface AsyncIterableIterator<TValue, TReturn = any, TNext = any>
   [Symbol.asyncIterator](): AsyncIterableIterator<TValue, TReturn, TNext>;
 }
 
-/**
- * Type alias to simplify this union
- * TODO: Come up with a better name
- */
-export type IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext> =
-  | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
-  | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
-
 function isIterable<TValue, TReturn, TNext>(arg: any): arg is Iterable<TValue, TReturn, TNext> {
   return !!arg && typeof arg === 'object' && typeof arg[Symbol.iterator] === 'function';
 }
@@ -189,7 +181,7 @@ namespace _iterators {
     private iterable: Iterator<TValue, TReturn, TNext>;
 
     constructor(
-      iterable: IteratorArg<TValue, TReturn, TNext>,
+      iterable: Iterable<TValue, TReturn, TNext>,
       private reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
       private state: TReducerReturn,
     ) {
@@ -224,7 +216,7 @@ namespace _iterators {
     private iterable: Iterator<TValue, TReturn, TNext>;
 
     constructor(
-      iterable: IteratorArg<TValue, TReturn, TNext>,
+      iterable: Iterable<TValue, TReturn, TNext>,
       private mapper: (arg: TValue) => TMapperReturn,
     ) {
       super();
@@ -252,7 +244,7 @@ namespace _iterators {
     private iterable: Iterator<TValue, TReturn, TNext>;
 
     constructor(
-      iterable: IteratorArg<TValue, TReturn, TNext>,
+      iterable: Iterable<TValue, TReturn, TNext>,
       private filterer: (arg: TValue) => boolean,
     ) {
       super();
@@ -390,7 +382,7 @@ const finalValues = Array.from(summingIterator);
 // finalValues will now be [1,3,6,10,15];
  */
 export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefined, TNext = any>(
-  iterator: IteratorArg<TValue, TReturn, TNext>,
+  iterator: Iterable<TValue, TReturn, TNext>,
   reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
   initial: TReducerReturn,
 ): AugmentedIterator<TReducerReturn, TReturn, TNext>;
@@ -400,7 +392,7 @@ export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefi
   initial: TReducerReturn,
 ): AugmentedAsyncIterator<TReducerReturn, TReturn, TNext>;
 export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefined, TNext = any>(
-  iterator: AsyncIterableIterator<TValue, TReturn, TNext> | IteratorArg<TValue, TReturn, TNext>,
+  iterator: AsyncIterableIterator<TValue, TReturn, TNext> | Iterable<TValue, TReturn, TNext>,
   reducer:
     | ((carry: TReducerReturn, arg: TValue) => Promise<TReducerReturn>)
     | ((carry: TReducerReturn, arg: TValue) => TReducerReturn),
@@ -425,7 +417,7 @@ export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefi
 }
 
 /**
- * Given an IteratorArg and a mapping function, returns a new IterableIterator that yields values from the initial iterator
+ * Given an Iterable and a mapping function, returns a new IterableIterator that yields values from the initial iterator
  * but passed through the mapping function.
  * @param {Iterable} iterator - The iterator you wish to map elements from
  * @param {Function} mapper - A function to use to map the elements iterator produces
@@ -441,7 +433,7 @@ const mapped = mapIterator(set, (item) => item * 2);
 console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
  */
 export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
-  iterator: IteratorArg<TValue, TReturn, TNext>,
+  iterator: Iterable<TValue, TReturn, TNext>,
   mapper: (arg: TValue) => TMapperReturn,
 ): AugmentedIterator<TMapperReturn, TReturn, TNext>;
 export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
@@ -449,7 +441,7 @@ export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined,
   mapper: (arg: TValue) => Promise<TMapperReturn>,
 ): AugmentedAsyncIterator<TMapperReturn, TReturn, TNext>;
 export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
-  iterator: IteratorArg<TValue, TReturn, TNext> | AsyncIterable<TValue, TReturn, TNext>,
+  iterator: Iterable<TValue, TReturn, TNext> | AsyncIterable<TValue, TReturn, TNext>,
   mapper: ((arg: TValue) => TMapperReturn) | ((arg: TValue) => Promise<TMapperReturn>),
 ): AugmentedIterator<TMapperReturn, TReturn, TNext> | AugmentedAsyncIterator<TMapperReturn, TReturn, TNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
@@ -464,7 +456,7 @@ export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined,
 }
 
 /**
- * Given an IteratorArg and a filtering function it will return a new IterableIterator that when polled will eagerly pull
+ * Given an Iterable and a filtering function it will return a new IterableIterator that when polled will eagerly pull
  * values from iterator and pass them to filterer until filterer returns true for an item, or we reach the end of iterator;
  * it will then yield this value itself.
  *
@@ -485,7 +477,7 @@ const filtered = filterIterator(set, (item) => item % 2 === 0);
 console.log(Array.from(filtered)); // logs out [2, 4]
  */
 export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
-  iterator: IteratorArg<TValue, TReturn, TNext>,
+  iterator: Iterable<TValue, TReturn, TNext>,
   filterer: (arg: TValue) => boolean,
 ): AugmentedIterator<TValue, TReturn, TNext>;
 export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
@@ -493,7 +485,7 @@ export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any
   filterer: (arg: TValue) => Promise<boolean>,
 ): AugmentedAsyncIterator<TValue, TReturn, TNext>;
 export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
-  iterator: IteratorArg<TValue, TReturn, TNext> | AsyncIterable<TValue, TReturn, TNext>,
+  iterator: Iterable<TValue, TReturn, TNext> | AsyncIterable<TValue, TReturn, TNext>,
   filterer: ((arg: TValue) => boolean) | ((arg: TValue) => Promise<boolean>),
 ): AugmentedIterator<TValue, TReturn, TNext> | AugmentedAsyncIterator<TValue, TReturn, TNext> {
   if (isIterable(iterator)) {
