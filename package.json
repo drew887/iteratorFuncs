@@ -11,7 +11,6 @@
     "test": "npm run build && find ./ -name '*.spec.ts' -print0 | xargs -n 1 -0 node --loader tsx --test",
     "test:coverage": "npm run build && find ./ -name '*.spec.ts' -print0 | xargs -n 1 -0 node --experimental-test-coverage --loader tsx --test",
     "lint": "prettier . --write",
-    "lint:check": "prettier . --check",
     "prepare": "husky install"
   },
   "author": "drew887121@gmail.com",

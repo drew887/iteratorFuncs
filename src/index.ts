@@ -130,6 +130,7 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
   }
 }
 
+/// This namespace exists purely to make sure we hide away the private implementations of the different kinds of iterators
 namespace SyncAugmentedIterators {
   /**
    * This is a private class for encapsulating the logic for reducing.
@@ -243,8 +244,7 @@ export abstract class AugmentedAsyncIterator<TValue, TReturn = any, TNext = any>
   map<TMapperReturn>(
     mapper: (item: TValue) => Promise<TMapperReturn>,
   ): AugmentedAsyncIterator<TMapperReturn, TReturn, TNext> {
-    throw new Error('TODO');
-    // return mapAsyncIterator(this, mapper);
+    return mapIterator(this, mapper);
   }
 
   /**
@@ -272,6 +272,7 @@ export abstract class AugmentedAsyncIterator<TValue, TReturn = any, TNext = any>
   }
 }
 
+/// This namespace exists purely to make sure we hide away the private implementations of the different kinds of iterators
 namespace AsyncAugmentedIterators {
   /**
    * This is a private class for encapsulating the logic for reducing.
@@ -301,6 +302,38 @@ namespace AsyncAugmentedIterators {
         return {
           ...result,
           value: this.state,
+        };
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * This is a private class for encapsulating the logic for mapping.
+   */
+  export class _MappingIterator<TValue, TMapperReturn, TReturn, TNext> extends AugmentedAsyncIterator<
+    TMapperReturn,
+    TReturn,
+    TNext
+  > {
+    private iterable: AsyncIterator<TValue, TReturn, TNext>;
+
+    constructor(
+      iterable: AsyncIterable<TValue, TReturn, TNext>,
+      private mapper: (arg: TValue) => Promise<TMapperReturn>,
+    ) {
+      super();
+      this.iterable = iterable[Symbol.asyncIterator]();
+    }
+
+    async next(...args: [] | [TNext]): Promise<IteratorResult<TMapperReturn, TReturn>> {
+      const result = await this.iterable.next(...args);
+
+      if (!result.done) {
+        return {
+          ...result,
+          value: await this.mapper(result.value),
         };
       }
 
@@ -389,9 +422,24 @@ console.log(Array.from(mapped)); // logs out [2, 4, 6, 8, 10]
 export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
   iterator: IteratorArg<TValue, TReturn, TNext>,
   mapper: (arg: TValue) => TMapperReturn,
-): AugmentedIterator<TMapperReturn, TReturn, TNext> {
+): AugmentedIterator<TMapperReturn, TReturn, TNext>;
+export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
+  iterator: AsyncIterable<TValue, TReturn, TNext>,
+  mapper: (arg: TValue) => Promise<TMapperReturn>,
+): AugmentedAsyncIterator<TMapperReturn, TReturn, TNext>;
+export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined, TNext = any>(
+  iterator: IteratorArg<TValue, TReturn, TNext> | AsyncIterable<TValue, TReturn, TNext>,
+  mapper: ((arg: TValue) => TMapperReturn) | ((arg: TValue) => Promise<TMapperReturn>),
+): AugmentedIterator<TMapperReturn, TReturn, TNext> | AugmentedAsyncIterator<TMapperReturn, TReturn, TNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
-  return new SyncAugmentedIterators._MappingIterator(iterator, mapper);
+  if (isIterable(iterator)) {
+    return new SyncAugmentedIterators._MappingIterator(iterator, <(arg: TValue) => TMapperReturn>mapper);
+  }
+
+  if (isAsyncIterable(iterator)) {
+    return new AsyncAugmentedIterators._MappingIterator(iterator, <(arg: TValue) => Promise<TMapperReturn>>mapper);
+  }
+  throw new Error('iterator parameter was neither an IterableIterator or an AsyncIterableIterator!');
 }
 
 /**
