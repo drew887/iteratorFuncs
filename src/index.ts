@@ -252,8 +252,7 @@ export abstract class AugmentedAsyncIterator<TValue, TReturn = any, TNext = any>
    * @param {Function} filter The filtering function you wish to use
    */
   filter(filter: (item: TValue) => Promise<boolean>): AugmentedAsyncIterator<TValue, TReturn, TNext> {
-    throw new Error('TODO');
-    // return filterAsyncIterator(this, filter);
+    return filterIterator(this, filter);
   }
 
   /**
@@ -335,6 +334,31 @@ namespace AsyncAugmentedIterators {
           ...result,
           value: await this.mapper(result.value),
         };
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * This is a private class for encapsulating the logic for filtering.
+   */
+  export class _FilteringIterator<TValue, TReturn, TNext> extends AugmentedAsyncIterator<TValue, TReturn, TNext> {
+    private iterable: AsyncIterator<TValue, TReturn, TNext>;
+
+    constructor(
+      iterable: AsyncIterable<TValue, TReturn, TNext>,
+      private filterer: (arg: TValue) => Promise<boolean>,
+    ) {
+      super();
+      this.iterable = iterable[Symbol.asyncIterator]();
+    }
+
+    async next(...args: [] | [TNext]): Promise<IteratorResult<TValue, TReturn>> {
+      let result = await this.iterable.next(...args);
+
+      while (!result.done && !(await this.filterer(result.value))) {
+        result = await this.iterable.next(...args);
       }
 
       return result;
@@ -466,8 +490,24 @@ console.log(Array.from(filtered)); // logs out [2, 4]
 export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
   iterator: IteratorArg<TValue, TReturn, TNext>,
   filterer: (arg: TValue) => boolean,
-): AugmentedIterator<TValue, TReturn, TNext> {
-  return new SyncAugmentedIterators._FilteringIterator(iterator, filterer);
+): AugmentedIterator<TValue, TReturn, TNext>;
+export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
+  iterator: AsyncIterable<TValue, TReturn, TNext>,
+  filterer: (arg: TValue) => Promise<boolean>,
+): AugmentedAsyncIterator<TValue, TReturn, TNext>;
+export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any>(
+  iterator: IteratorArg<TValue, TReturn, TNext> | AsyncIterable<TValue, TReturn, TNext>,
+  filterer: ((arg: TValue) => boolean) | ((arg: TValue) => Promise<boolean>),
+): AugmentedIterator<TValue, TReturn, TNext> | AugmentedAsyncIterator<TValue, TReturn, TNext> {
+  if (isIterable(iterator)) {
+    return new SyncAugmentedIterators._FilteringIterator(iterator, <(arg: TValue) => boolean>filterer);
+  }
+
+  if (isAsyncIterable(iterator)) {
+    return new AsyncAugmentedIterators._FilteringIterator(iterator, <(arg: TValue) => Promise<boolean>>filterer);
+  }
+
+  throw new Error('iterator parameter was neither an IterableIterator or an AsyncIterableIterator!');
 }
 
 //  =============      Greedy Versions       ================

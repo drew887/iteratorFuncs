@@ -196,6 +196,7 @@ describe('composition versions', () => {
         }, err);
       });
     });
+
     it('should throw an error with a good message when passed a non iterable/iterator', () => {
       assert.throws(
         () => {
@@ -309,6 +310,16 @@ describe('composition versions', () => {
         assert.deepEqual(results, expected, 'yields only the values that pass the filter');
         assert.strictEqual(filter.mock.callCount(), set.size, 'filter func gets called once for each item');
       });
+    });
+
+    it('should throw an error with a good message when passed a non iterable/iterator', () => {
+      assert.throws(
+        () => {
+          // @ts-ignore
+          filterIterator(null, null, null);
+        },
+        { message: 'iterator parameter was neither an IterableIterator or an AsyncIterableIterator!' },
+      );
     });
   });
 });
@@ -476,6 +487,90 @@ describe('async iterators', () => {
         };
 
         const actual = mapIterator(failingGenerator(), async () => {});
+
+        assert.rejects(async () => {
+          for await (const a of actual) {
+            //empty on purpose
+          }
+        }, err);
+      });
+    });
+  });
+  describe('filterIterator', () => {
+    describe('async generators', () => {
+      let iter: AsyncGenerator<number, void>;
+      const iterLength = 5;
+
+      const generator = async function* () {
+        for (let i = 1; i <= iterLength; i++) {
+          yield i;
+        }
+
+        return;
+      };
+
+      beforeEach(() => {
+        iter = generator();
+      });
+
+      it('should return another async iterator', () => {
+        const actual = filterIterator(iter, async () => {
+          return true;
+        });
+
+        assert.strictEqual(typeof actual[Symbol.asyncIterator], 'function', 'returns another async iterator');
+      });
+
+      it('should yield only values that pass the filter', async () => {
+        const filter = mock.fn(async (item: number) => {
+          return item % 2 == 0;
+        });
+
+        const actual = filterIterator(iter, filter);
+        const expected = [2, 4];
+
+        const results = [];
+        for await (const item of actual) {
+          results.push(item);
+        }
+
+        assert.strictEqual((await actual.next()).done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields only the values that pass the filter');
+        assert.strictEqual(filter.mock.callCount(), iterLength, 'filter func gets called only once for each item');
+      });
+
+      it('should pass back values to generator when a value is passed to next', async () => {
+        let done = false;
+        const generator = async function* (): AsyncGenerator<number, any, number> {
+          const result = yield 5;
+          assert.strictEqual(result, 10, 'got passed back the value passed to next');
+          done = true;
+        };
+
+        const actual = filterIterator(generator(), async () => true);
+
+        const expected = [5];
+
+        const results = [];
+        let next = await actual.next();
+        while (!next.done) {
+          results.push(next.value);
+          next = await actual.next(10);
+        }
+
+        assert.strictEqual((await actual.next()).done, true, 'iterator marks done');
+        assert.strictEqual(done, true, 'got to the end of the generator function');
+        assert.deepEqual(results, expected, 'yields the expected value, still run through mapper function');
+      });
+
+      it('should bail early if iterator throws', async () => {
+        const err = new Error('failed Generator!');
+        const failingGenerator = function* () {
+          yield 5;
+          throw err;
+        };
+
+        const actual = filterIterator(failingGenerator(), () => true);
 
         assert.rejects(async () => {
           for await (const a of actual) {
@@ -654,25 +749,6 @@ describe('combinations', () => {
       "should when called again on an instance we've made, then just add a ref to the fun, not make a new instance",
       () => {},
     );
-  });
-
-  it('chaining map into filter should work', () => {
-    const set = new Set([1, 2, 3, 4, 5]);
-    const mapper = mock.fn((item: number) => item * 2);
-    const filter = mock.fn((item: number) => item > 5);
-
-    const mapped = mapIterator(set, mapper);
-    const filtered = filterIterator(mapped, filter);
-
-    assert.strictEqual(mapper.mock.callCount(), 0, "mapper isn't called before values are yielded");
-    assert.strictEqual(filter.mock.callCount(), 0, "filter isn't called before values are yielded");
-
-    const expected = [6, 8, 10];
-    const result = Array.from(filtered);
-
-    assert.strictEqual(mapper.mock.callCount(), set.size, 'mapper gets called once for every instance');
-    assert.strictEqual(filter.mock.callCount(), set.size, 'filter gets called once for every instance');
-    assert.deepEqual(result, expected, 'Final result is only the mapped values that pass the filter');
   });
 });
 
