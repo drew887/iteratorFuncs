@@ -626,10 +626,10 @@ describe('composition versions', () => {
   });
 });
 
-describe.todo('async iterators', () => {
+describe('async iterators', () => {
   describe('reduceAsyncIterator', () => {
     describe('over Generators', () => {
-      const generator = function* () {
+      const generator = async function* () {
         for (let i = 1; i <= 5; i++) {
           yield i;
         }
@@ -637,19 +637,81 @@ describe.todo('async iterators', () => {
         return;
       };
 
-      let iter: Generator<number, void>;
+      let iter: AsyncGenerator<number, void>;
 
       beforeEach(() => {
         iter = generator();
       });
 
-      it('should return another iterator', () => {
-        const actual = reduceIterator(iter, () => {}, undefined);
+      it('should return another AsyncIterator', () => {
+        const actual = reduceIterator(iter, async () => {}, undefined);
 
-        assert.strictEqual(typeof actual[Symbol.iterator], 'function', 'returns another iterator');
+        assert.strictEqual(typeof actual[Symbol.asyncIterator], 'function', 'returns another AsyncIterator');
       });
 
-      it('should yield reduced values asynchronously', () => {});
+      it('should yield all reduced values', async () => {
+        const reducer = mock.fn((carry, item) => {
+          return carry + item;
+        });
+
+        const actual = reduceIterator(iter, reducer, 0);
+        const expected = [1, 3, 6, 10, 15];
+
+        const results = [];
+        for await (const item of actual) {
+          results.push(item);
+        }
+
+        assert.strictEqual((await actual.next()).done, true, 'iterator marks done');
+        assert.deepEqual(results, expected, 'yields the right numbers');
+        assert.strictEqual(reducer.mock.callCount(), expected.length, 'reducer func gets called once for each item');
+      });
+
+      it('should pass back values to generator when a value is passed to next', async () => {
+        let done = false;
+        const generator = async function* (): AsyncGenerator<number, any, number> {
+          const result = yield 5;
+          assert.strictEqual(result, 10, 'got passed back the value passed to next');
+          done = true;
+        };
+
+        const actual = reduceIterator(
+          generator(),
+          async (carry, arg) => {
+            return carry + arg;
+          },
+          0,
+        );
+
+        const expected = [5];
+
+        const results = [];
+        let next = await actual.next();
+        while (!next.done) {
+          results.push(next.value);
+          next = await actual.next(10);
+        }
+
+        assert.strictEqual((await actual.next()).done, true, 'iterator marks done');
+        assert.strictEqual(done, true, 'got to the end of the generator function');
+        assert.deepEqual(results, expected, 'yields all the right values');
+      });
+
+      it('should bail early if iterator throws', () => {
+        const err = new Error('failed Generator!');
+        const failingGenerator = async function* () {
+          yield 5;
+          throw err;
+        };
+
+        const actual = reduceIterator(failingGenerator(), async () => {}, undefined);
+
+        assert.rejects(async () => {
+          for await (const a of actual) {
+            //empty on purpose
+          }
+        }, err);
+      });
     });
   });
 });

@@ -43,10 +43,25 @@ export interface Iterable<TValue, TReturn = any, TNext = any> {
 }
 
 /**
+ * We override the default Iterable interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
+ */
+export interface AsyncIterable<TValue, TReturn = any, TNext = any> {
+  [Symbol.asyncIterator](): AsyncIterator<TValue, TReturn, TNext>;
+}
+
+/**
  * We override the default IterableIterator interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
  */
 export interface IterableIterator<TValue, TReturn = any, TNext = any> extends Iterator<TValue, TReturn, TNext> {
   [Symbol.iterator](): IterableIterator<TValue, TReturn, TNext>;
+}
+
+/**
+ * We override the default IterableIterator interface since it doesn't allow forwarding of the other 2 type params that Iterator can take
+ */
+export interface AsyncIterableIterator<TValue, TReturn = any, TNext = any>
+  extends AsyncIterator<TValue, TReturn, TNext> {
+  [Symbol.asyncIterator](): AsyncIterableIterator<TValue, TReturn, TNext>;
 }
 
 /**
@@ -57,8 +72,11 @@ export type IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext> =
   | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
   | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
 
-//  =============      Non Greedy Versions       ================
+function isIteratable<TValue, TReturn, TNext>(arg: any): arg is Iterable<TValue, TReturn, TNext> {
+  return !!arg && typeof arg === 'object' && typeof arg[Symbol.iterator] === 'function';
+}
 
+//  =============      Non Greedy Versions       ================
 /**
  * An AugmentedIterator represents one of the IterableIterators we return.
  * This abstract class is exported only to provide type/intellisense information,
@@ -108,91 +126,182 @@ export abstract class AugmentedIterator<TValue, TReturn = any, TNext = any>
   }
 }
 
-/**
- * This is a private class for encapsulating the logic for reducing.
- */
-class _ReducingIterator<TValue, TReducerReturn, TReturn, TNext> extends AugmentedIterator<
-  TReducerReturn,
-  TReturn,
-  TNext
-> {
-  private iterable: Iterator<TValue, TReturn, TNext>;
+namespace SyncAugmentedIterators {
+  /**
+   * This is a private class for encapsulating the logic for reducing.
+   */
+  export class _ReducingIterator<TValue, TReducerReturn, TReturn, TNext> extends AugmentedIterator<
+    TReducerReturn,
+    TReturn,
+    TNext
+  > {
+    private iterable: Iterator<TValue, TReturn, TNext>;
 
-  constructor(
-    iterable: IteratorArg<TValue, TReturn, TNext>,
-    private reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
-    private state: TReducerReturn,
-  ) {
-    super();
-    this.iterable = iterable[Symbol.iterator]();
-  }
-
-  next(...args: [] | [TNext]): IteratorResult<TReducerReturn, TReturn> {
-    const result = this.iterable.next(...args);
-
-    if (!result.done) {
-      this.state = this.reducer(this.state, result.value);
-
-      return {
-        ...result,
-        value: this.state,
-      };
+    constructor(
+      iterable: IteratorArg<TValue, TReturn, TNext>,
+      private reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
+      private state: TReducerReturn,
+    ) {
+      super();
+      this.iterable = iterable[Symbol.iterator]();
     }
 
-    return result;
+    next(...args: [] | [TNext]): IteratorResult<TReducerReturn, TReturn> {
+      const result = this.iterable.next(...args);
+
+      if (!result.done) {
+        this.state = this.reducer(this.state, result.value);
+
+        return {
+          ...result,
+          value: this.state,
+        };
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * This is a private class for encapsulating the logic for mapping.
+   */
+  export class _MappingIterator<TValue, TMapperReturn, TReturn, TNext> extends AugmentedIterator<
+    TMapperReturn,
+    TReturn,
+    TNext
+  > {
+    private iterable: Iterator<TValue, TReturn, TNext>;
+
+    constructor(
+      iterable: IteratorArg<TValue, TReturn, TNext>,
+      private mapper: (arg: TValue) => TMapperReturn,
+    ) {
+      super();
+      this.iterable = iterable[Symbol.iterator]();
+    }
+
+    next(...args: [] | [TNext]): IteratorResult<TMapperReturn, TReturn> {
+      const result = this.iterable.next(...args);
+
+      if (!result.done) {
+        return {
+          ...result,
+          value: this.mapper(result.value),
+        };
+      }
+
+      return result;
+    }
+  }
+
+  /**
+   * This is a private class for encapsulating the logic for filtering.
+   */
+  export class _FilteringIterator<TValue, TReturn, TNext> extends AugmentedIterator<TValue, TReturn, TNext> {
+    private iterable: Iterator<TValue, TReturn, TNext>;
+
+    constructor(
+      iterable: IteratorArg<TValue, TReturn, TNext>,
+      private filterer: (arg: TValue) => boolean,
+    ) {
+      super();
+      this.iterable = iterable[Symbol.iterator]();
+    }
+
+    next(...args: [] | [TNext]): IteratorResult<TValue, TReturn> {
+      let result = this.iterable.next(...args);
+
+      while (!result.done && !this.filterer(result.value)) {
+        result = this.iterable.next(...args);
+      }
+
+      return result;
+    }
   }
 }
 
-/**
- * This is a private class for encapsulating the logic for mapping.
- */
-class _MappingIterator<TValue, TMapperReturn, TReturn, TNext> extends AugmentedIterator<TMapperReturn, TReturn, TNext> {
-  private iterable: Iterator<TValue, TReturn, TNext>;
-
-  constructor(
-    iterable: IteratorArg<TValue, TReturn, TNext>,
-    private mapper: (arg: TValue) => TMapperReturn,
-  ) {
-    super();
-    this.iterable = iterable[Symbol.iterator]();
+export abstract class AugmentedAsyncIterator<TValue, TReturn = any, TNext = any>
+  implements AsyncIterableIterator<TValue, TReturn, TNext>
+{
+  [Symbol.asyncIterator](): this {
+    return this;
   }
 
-  next(...args: [] | [TNext]): IteratorResult<TMapperReturn, TReturn> {
-    const result = this.iterable.next(...args);
+  abstract next(...args: [] | [TNext]): Promise<IteratorResult<TValue, TReturn>>;
 
-    if (!result.done) {
-      return {
-        ...result,
-        value: this.mapper(result.value),
-      };
-    }
+  /**
+   * Returns a new AugmentedIterator that will run mapper over each item before yielding
+   *
+   * Because we return another AugmentedIterator instance, this call is chainable.
+   * @param {Function} mapper the mapping function you want to be run over all values
+   * @typeParam TMapperReturn the return type from mapper, will also become the new TValue type of the returned AugmentedIterator
+   */
+  map<TMapperReturn>(
+    mapper: (item: TValue) => Promise<TMapperReturn>,
+  ): AugmentedAsyncIterator<TMapperReturn, TReturn, TNext> {
+    throw new Error('TODO');
+    // return mapAsyncIterator(this, mapper);
+  }
 
-    return result;
+  /**
+   * Returns a new AugmentedIterator that will only yield values for which filter returns true
+   * @param {Function} filter The filtering function you wish to use
+   */
+  filter(filter: (item: TValue) => Promise<boolean>): AugmentedAsyncIterator<TValue, TReturn, TNext> {
+    throw new Error('TODO');
+    // return filterAsyncIterator(this, filter);
+  }
+
+  /**
+   * Returns a new AugmentedIterator that has access to the last value yielded OR initial the same way a reduce would
+   * normally work over say an array.
+   * @param reducer the function you want to use as a reducer. Takes arguments in (carry,item) order. The first time we
+   *   yield a value carry will be initial, after which it will be the previously returned value from reducer.
+   * @param initial the value we should pass to reducer the first time we yield a value.
+   * @typeParam TReducerReturn the return type of reducer, and of initial; will also become the TValue type of the returned AugmentedIterator
+   */
+  reduce<TReducerReturn>(
+    reducer: (carry: TReducerReturn, item: TValue) => Promise<TReducerReturn>,
+    initial: TReducerReturn,
+  ): AugmentedAsyncIterator<TReducerReturn, TReturn, TNext> {
+    return reduceIterator(this, reducer, initial);
   }
 }
 
-/**
- * This is a private class for encapsulating the logic for filtering.
- */
-class _FilteringIterator<TValue, TReturn, TNext> extends AugmentedIterator<TValue, TReturn, TNext> {
-  private iterable: Iterator<TValue, TReturn, TNext>;
+namespace AsyncAugmentedIterators {
+  /**
+   * This is a private class for encapsulating the logic for reducing.
+   */
+  export class _ReducingIterator<TValue, TReducerReturn, TReturn, TNext> extends AugmentedAsyncIterator<
+    TReducerReturn,
+    TReturn,
+    TNext
+  > {
+    private iterable: AsyncIterator<TValue, TReturn, TNext>;
 
-  constructor(
-    iterable: IteratorArg<TValue, TReturn, TNext>,
-    private filterer: (arg: TValue) => boolean,
-  ) {
-    super();
-    this.iterable = iterable[Symbol.iterator]();
-  }
-
-  next(...args: [] | [TNext]): IteratorResult<TValue, TReturn> {
-    let result = this.iterable.next(...args);
-
-    while (!result.done && !this.filterer(result.value)) {
-      result = this.iterable.next(...args);
+    constructor(
+      iterable: AsyncIterable<TValue, TReturn, TNext>,
+      private reducer: (carry: TReducerReturn, arg: TValue) => Promise<TReducerReturn>,
+      private state: TReducerReturn,
+    ) {
+      super();
+      this.iterable = iterable[Symbol.asyncIterator]();
     }
 
-    return result;
+    async next(...args: [] | [TNext]): Promise<IteratorResult<TReducerReturn, TReturn>> {
+      const result = await this.iterable.next(...args);
+
+      if (!result.done) {
+        this.state = await this.reducer(this.state, result.value);
+
+        return {
+          ...result,
+          value: this.state,
+        };
+      }
+
+      return result;
+    }
   }
 }
 
@@ -226,8 +335,35 @@ export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefi
   iterator: IteratorArg<TValue, TReturn, TNext>,
   reducer: (carry: TReducerReturn, arg: TValue) => TReducerReturn,
   initial: TReducerReturn,
-): AugmentedIterator<TReducerReturn, TReturn, TNext> {
-  return new _ReducingIterator(iterator, reducer, initial);
+): AugmentedIterator<TReducerReturn, TReturn, TNext>;
+export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefined, TNext = any>(
+  iterator: AsyncIterableIterator<TValue, TReturn, TNext>,
+  reducer: (carry: TReducerReturn, arg: TValue) => Promise<TReducerReturn>,
+  initial: TReducerReturn,
+): AugmentedAsyncIterator<TReducerReturn, TReturn, TNext>;
+export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefined, TNext = any>(
+  iterator: AsyncIterableIterator<TValue, TReturn, TNext> | IteratorArg<TValue, TReturn, TNext>,
+  reducer:
+    | ((carry: TReducerReturn, arg: TValue) => Promise<TReducerReturn>)
+    | ((carry: TReducerReturn, arg: TValue) => TReducerReturn),
+  initial: TReducerReturn,
+): AugmentedIterator<TReducerReturn, TReturn, TNext> | AugmentedAsyncIterator<TReducerReturn, TReturn, TNext> {
+  if (isIteratable(iterator)) {
+    return new SyncAugmentedIterators._ReducingIterator(
+      iterator,
+      <(carry: TReducerReturn, arg: TValue) => TReducerReturn>reducer, // We force the type here due to ts overloads but ***technically*** this could be the wrong type
+      initial,
+    );
+  }
+
+  if (Symbol.asyncIterator in iterator) {
+    return new AsyncAugmentedIterators._ReducingIterator(
+      iterator,
+      <(carry: TReducerReturn, arg: TValue) => Promise<TReducerReturn>>reducer,
+      initial,
+    );
+  }
+  throw new Error('iterator parameter was neither an IterableIterator or an AsyncIterableIterator!');
 }
 
 /**
@@ -251,7 +387,7 @@ export function mapIterator<TValue, TMapperReturn, TReturn = TValue | undefined,
   mapper: (arg: TValue) => TMapperReturn,
 ): AugmentedIterator<TMapperReturn, TReturn, TNext> {
   // Because we can't guarantee a 0 value for the types, we can't just fall back to reduce.
-  return new _MappingIterator(iterator, mapper);
+  return new SyncAugmentedIterators._MappingIterator(iterator, mapper);
 }
 
 /**
@@ -279,7 +415,7 @@ export function filterIterator<TValue, TReturn = TValue | undefined, TNext = any
   iterator: IteratorArg<TValue, TReturn, TNext>,
   filterer: (arg: TValue) => boolean,
 ): AugmentedIterator<TValue, TReturn, TNext> {
-  return new _FilteringIterator(iterator, filterer);
+  return new SyncAugmentedIterators._FilteringIterator(iterator, filterer);
 }
 
 //  =============      Greedy Versions       ================
