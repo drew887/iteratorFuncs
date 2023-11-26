@@ -433,6 +433,15 @@ describe('composition versions', () => {
         }, err);
       });
     });
+    it('should throw an error with a good message when passed a non iterable/iterator', () => {
+      assert.throws(
+        () => {
+          // @ts-ignore
+          reduceIterator(null, null, null);
+        },
+        { message: 'iterator parameter was neither an IterableIterator or an AsyncIterableIterator!' },
+      );
+    });
   });
 
   describe('mapIterator', () => {

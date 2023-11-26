@@ -72,8 +72,12 @@ export type IteratorArg<TIteratorValue, TIteratorReturn, TIteratorNext> =
   | Iterable<TIteratorValue, TIteratorReturn, TIteratorNext>
   | IterableIterator<TIteratorValue, TIteratorReturn, TIteratorNext>;
 
-function isIteratable<TValue, TReturn, TNext>(arg: any): arg is Iterable<TValue, TReturn, TNext> {
+function isIterable<TValue, TReturn, TNext>(arg: any): arg is Iterable<TValue, TReturn, TNext> {
   return !!arg && typeof arg === 'object' && typeof arg[Symbol.iterator] === 'function';
+}
+
+function isAsyncIterable<TValue, TReturn, TNext>(arg: any): arg is AsyncIterable<TValue, TReturn, TNext> {
+  return !!arg && typeof arg === 'object' && typeof arg[Symbol.asyncIterator] === 'function';
 }
 
 //  =============      Non Greedy Versions       ================
@@ -348,7 +352,7 @@ export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefi
     | ((carry: TReducerReturn, arg: TValue) => TReducerReturn),
   initial: TReducerReturn,
 ): AugmentedIterator<TReducerReturn, TReturn, TNext> | AugmentedAsyncIterator<TReducerReturn, TReturn, TNext> {
-  if (isIteratable(iterator)) {
+  if (isIterable(iterator)) {
     return new SyncAugmentedIterators._ReducingIterator(
       iterator,
       <(carry: TReducerReturn, arg: TValue) => TReducerReturn>reducer, // We force the type here due to ts overloads but ***technically*** this could be the wrong type
@@ -356,7 +360,7 @@ export function reduceIterator<TValue, TReducerReturn, TReturn = TValue | undefi
     );
   }
 
-  if (Symbol.asyncIterator in iterator) {
+  if (isAsyncIterable(iterator)) {
     return new AsyncAugmentedIterators._ReducingIterator(
       iterator,
       <(carry: TReducerReturn, arg: TValue) => Promise<TReducerReturn>>reducer,
